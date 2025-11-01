@@ -7,6 +7,8 @@ import { Upload, Loader2, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from 'pdfjs-dist';
+// @ts-ignore - Vite handles this worker import
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 interface CVAnalysis {
   score: number;
@@ -23,8 +25,8 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
   const [fileName, setFileName] = useState<string>("");
 
-  // Set up PDF.js worker - use jsdelivr CDN which works better with Vite
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+  // Set up PDF.js worker using Vite's URL import
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
