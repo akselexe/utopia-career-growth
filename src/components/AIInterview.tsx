@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Send, Square, Loader2, Mic } from "lucide-react";
+import { Sparkles, Send, Square, Loader2, Mic, Video, MicOff, VideoOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -15,10 +16,193 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [behavioralFeedback, setBehavioralFeedback] = useState<string[]>([]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const analysisIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
+      }
+    };
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: true 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      
+      mediaStreamRef.current = stream;
+      setIsCameraOn(true);
+      
+      // Start periodic behavioral analysis
+      analysisIntervalRef.current = setInterval(() => {
+        captureAndAnalyzeFrame();
+      }, 10000); // Analyze every 10 seconds
+      
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera Error",
+        description: "Could not access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    if (analysisIntervalRef.current) {
+      clearInterval(analysisIntervalRef.current);
+      analysisIntervalRef.current = null;
+    }
+    setIsCameraOn(false);
+  };
+
+  const captureAndAnalyzeFrame = async () => {
+    if (!videoRef.current || !isCameraOn) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.drawImage(videoRef.current, 0, 0);
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64Image = reader.result as string;
+            
+            try {
+              const { data, error } = await supabase.functions.invoke('analyze-behavior', {
+                body: { image: base64Image.split(',')[1] }
+              });
+              
+              if (data?.feedback) {
+                setBehavioralFeedback(prev => [...prev, data.feedback].slice(-5));
+              }
+            } catch (error) {
+              console.error("Behavioral analysis error:", error);
+            }
+          };
+          reader.readAsDataURL(blob);
+        }
+      });
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    if (!mediaStreamRef.current) {
+      toast({
+        title: "Camera Required",
+        description: "Please enable camera first to use voice recording.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(mediaStreamRef.current);
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await processVoiceInput(audioBlob);
+      };
+      
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast({
+        title: "Recording Error",
+        description: "Could not start voice recording.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const processVoiceInput = async (audioBlob: Blob) => {
+    setIsLoading(true);
+    
+    try {
+      // Convert audio to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        
+        // Transcribe audio
+        const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio.split(',')[1] }
+        });
+        
+        if (transcriptError || !transcriptData?.text) {
+          throw new Error("Failed to transcribe audio");
+        }
+        
+        const transcribedText = transcriptData.text;
+        setInputValue(transcribedText);
+        
+        // Send as message
+        const userMessage: Message = { role: "user", content: transcribedText };
+        setMessages((prev) => [...prev, userMessage]);
+        setInputValue("");
+        
+        await streamChat([...messages, userMessage]);
+      };
+      
+      reader.readAsDataURL(audioBlob);
+    } catch (error) {
+      console.error("Error processing voice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process voice input",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const startInterview = async () => {
@@ -148,9 +332,11 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const stopInterview = () => {
+    stopCamera();
     setHasStarted(false);
     setMessages([]);
     setInputValue("");
+    setBehavioralFeedback([]);
     
     toast({
       title: "Interview Complete!",
@@ -184,12 +370,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
-              <Mic className="w-8 h-8 text-accent" />
+              <Video className="w-8 h-8 text-accent" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-bold">Voice Interview Practice</h3>
+              <h3 className="font-bold">AI Behavioral Interview</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Get real-time feedback on your answers, communication style, and confidence level
+                Practice with camera and voice for real-time behavioral analysis including body language, facial expressions, and communication style
               </p>
             </div>
             <Button 
@@ -199,35 +385,108 @@ export const AIInterview = ({ userId }: { userId: string }) => {
               disabled={!jobTitle.trim()}
             >
               <Sparkles className="w-5 h-5" />
-              Start Interview Practice
+              Start Behavioral Interview
             </Button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-muted rounded-lg p-4 max-h-96 overflow-y-auto space-y-3">
-            {messages.map((message, i) => (
-              <div
-                key={i}
-                className={`p-3 rounded-lg ${
-                  message.role === "assistant" ? "bg-primary/10" : "bg-accent/10"
-                }`}
-              >
-                <p className="text-sm font-medium mb-1">
-                  {message.role === "assistant" ? "Interviewer" : "You"}
-                </p>
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Video Feed */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="relative bg-muted rounded-lg overflow-hidden aspect-video">
+                {isCameraOn ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center space-y-2">
+                      <VideoOff className="w-12 h-12 mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Camera Off</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Camera Controls */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={isCameraOn ? "destructive" : "default"}
+                    onClick={isCameraOn ? stopCamera : startCamera}
+                    className="gap-2"
+                  >
+                    {isCameraOn ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                    {isCameraOn ? "Stop" : "Start"} Camera
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant={isRecording ? "destructive" : "default"}
+                    onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                    disabled={!isCameraOn}
+                    className="gap-2"
+                  >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    {isRecording ? "Stop" : "Start"} Voice
+                  </Button>
+                </div>
               </div>
-            ))}
-            {isLoading && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Interviewer is thinking...</span>
+
+              {/* Messages */}
+              <div className="bg-muted rounded-lg p-4 max-h-64 overflow-y-auto space-y-3">
+                {messages.map((message, i) => (
+                  <div
+                    key={i}
+                    className={`p-3 rounded-lg ${
+                      message.role === "assistant" ? "bg-primary/10" : "bg-accent/10"
+                    }`}
+                  >
+                    <p className="text-sm font-medium mb-1">
+                      {message.role === "assistant" ? "Interviewer" : "You"}
+                    </p>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Interviewer is thinking...</span>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            )}
-            <div ref={messagesEndRef} />
+            </div>
+
+            {/* Behavioral Feedback Sidebar */}
+            <div className="space-y-3">
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-accent" />
+                  Behavioral Analysis
+                </h3>
+                <div className="space-y-2">
+                  {behavioralFeedback.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Enable camera to receive real-time behavioral feedback
+                    </p>
+                  ) : (
+                    behavioralFeedback.map((feedback, i) => (
+                      <div key={i} className="text-sm p-2 bg-background rounded border border-border">
+                        {feedback}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
+          {/* Text Input */}
           <div className="flex gap-2">
             <Input
               placeholder="Type your response..."
