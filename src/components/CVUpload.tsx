@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Upload, Loader2, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import * as pdfjsLib from 'pdfjs-dist';
 
 interface CVAnalysis {
   score: number;
@@ -21,6 +22,26 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
   const [fileName, setFileName] = useState<string>("");
+
+  // Set up PDF.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      fullText += pageText + '\n';
+    }
+
+    return fullText;
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,8 +73,15 @@ export const CVUpload = ({ userId }: { userId: string }) => {
     setAnalysis(null);
 
     try {
-      // Read file as text (simplified for demo - in production, use proper CV parsing)
-      const text = await file.text();
+      // Extract text from PDF
+      let text: string;
+      
+      if (file.type === 'application/pdf') {
+        text = await extractTextFromPDF(file);
+      } else {
+        // For TXT and other text files, read directly
+        text = await file.text();
+      }
 
       // Upload to storage
       const filePath = `${userId}/${Date.now()}_${file.name}`;
