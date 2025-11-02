@@ -26,6 +26,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const analysisIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     return () => {
@@ -43,18 +44,23 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
+        video: { width: 1280, height: 720 }, 
         audio: true 
       });
       
+      mediaStreamRef.current = stream;
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-        };
+        videoRef.current.muted = true;
+        try {
+          await videoRef.current.play();
+          console.log("Video playing successfully");
+        } catch (playError) {
+          console.error("Error playing video:", playError);
+        }
       }
       
-      mediaStreamRef.current = stream;
       setIsCameraOn(true);
       
       // Start periodic behavioral analysis
@@ -84,6 +90,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       clearInterval(analysisIntervalRef.current);
       analysisIntervalRef.current = null;
     }
+    window.speechSynthesis.cancel();
     setIsCameraOn(false);
   };
 
@@ -236,6 +243,24 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     }
   };
 
+  const speakText = (text: string) => {
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices[0];
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    speechSynthesisRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
   const streamChat = async (currentMessages: Message[]) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/interview-chat`;
     
@@ -306,6 +331,11 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             break;
           }
         }
+      }
+      
+      // Speak the complete response
+      if (assistantContent) {
+        speakText(assistantContent);
       }
     } catch (error) {
       throw error;
@@ -397,17 +427,17 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Video Feed */}
             <div className="lg:col-span-2 space-y-3">
-              <div className="relative bg-muted rounded-lg overflow-hidden aspect-video">
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
                 {isCameraOn ? (
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover mirror"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
                     <div className="text-center space-y-2">
                       <VideoOff className="w-12 h-12 mx-auto text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">Camera Off</p>
