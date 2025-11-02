@@ -49,8 +49,9 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // Explicitly play the video
-        await videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
       }
       
       mediaStreamRef.current = stream;
