@@ -24,7 +24,7 @@ serve(async (req) => {
     const formData = new FormData();
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
-    formData.append("model", "whisper-1");
+    formData.append("model", "whisper-large-v3");
 
     // Use Groq Whisper for transcription
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
