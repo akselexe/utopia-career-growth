@@ -145,7 +145,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const startVoiceRecording = async () => {
+    console.log("startVoiceRecording called");
+    console.log("mediaStreamRef.current:", mediaStreamRef.current);
+    console.log("isCameraOn:", isCameraOn);
+    
     if (!mediaStreamRef.current) {
+      console.error("No media stream available");
       toast({
         title: "Camera Required",
         description: "Please enable camera first to use voice recording.",
@@ -159,6 +164,8 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       
       // Create a new MediaRecorder with the audio track from the stream
       const audioTracks = mediaStreamRef.current.getAudioTracks();
+      console.log("Audio tracks:", audioTracks.length);
+      
       if (audioTracks.length === 0) {
         throw new Error("No audio track available");
       }
@@ -166,6 +173,8 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       const mediaRecorder = new MediaRecorder(mediaStreamRef.current, {
         mimeType: 'audio/webm',
       });
+      
+      console.log("MediaRecorder created");
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -195,12 +204,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       
-      console.log("Recording started");
+      console.log("Recording started successfully");
     } catch (error) {
       console.error("Error starting recording:", error);
       toast({
         title: "Recording Error",
-        description: "Could not start voice recording.",
+        description: error instanceof Error ? error.message : "Could not start voice recording.",
         variant: "destructive",
       });
     }
