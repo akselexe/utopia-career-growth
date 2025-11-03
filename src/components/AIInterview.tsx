@@ -44,8 +44,16 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 1280, height: 720 }, 
-        audio: true 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        }, 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
       
       mediaStreamRef.current = stream;
@@ -53,20 +61,28 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
-        try {
-          await videoRef.current.play();
-          console.log("Video playing successfully");
-        } catch (playError) {
-          console.error("Error playing video:", playError);
-        }
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current?.play();
+            console.log("Video playing successfully");
+            setIsCameraOn(true);
+          } catch (playError) {
+            console.error("Error playing video:", playError);
+            toast({
+              title: "Video Error",
+              description: "Could not start video playback.",
+              variant: "destructive",
+            });
+          }
+        };
       }
-      
-      setIsCameraOn(true);
       
       // Start periodic behavioral analysis
       analysisIntervalRef.current = setInterval(() => {
         captureAndAnalyzeFrame();
-      }, 10000); // Analyze every 10 seconds
+      }, 10000);
       
     } catch (error) {
       console.error("Error accessing camera:", error);
@@ -229,7 +245,15 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setIsLoading(true);
 
     try {
+      // Start camera first
       await startCamera();
+      
+      toast({
+        title: "Interview Started",
+        description: "AI will greet you shortly. Hold the mic button to respond.",
+      });
+      
+      // Then start the interview with AI greeting
       await streamChat([]);
     } catch (error) {
       console.error("Error starting interview:", error);
@@ -432,7 +456,6 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                 {isCameraOn ? (
                   <video
                     ref={videoRef}
-                    autoPlay
                     playsInline
                     muted
                     className="w-full h-full object-cover mirror"
@@ -441,34 +464,10 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                   <div className="w-full h-full flex items-center justify-center bg-muted">
                     <div className="text-center space-y-2">
                       <VideoOff className="w-12 h-12 mx-auto text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">Camera Off</p>
+                      <p className="text-sm text-muted-foreground">Camera will start automatically</p>
                     </div>
                   </div>
                 )}
-                
-                {/* Camera Controls */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={isCameraOn ? "destructive" : "default"}
-                    onClick={isCameraOn ? stopCamera : startCamera}
-                    className="gap-2"
-                  >
-                    {isCameraOn ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                    {isCameraOn ? "Stop" : "Start"} Camera
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    variant={isRecording ? "destructive" : "default"}
-                    onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                    disabled={!isCameraOn}
-                    className="gap-2"
-                  >
-                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    {isRecording ? "Stop" : "Start"} Voice
-                  </Button>
-                </div>
               </div>
 
               {/* Messages */}
@@ -521,11 +520,13 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           </div>
 
           {/* Voice Control */}
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col items-center gap-4">
             <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {isRecording ? "Speaking... Release to send" : "Hold to speak"}
+              <p className="text-sm font-medium">
+                {isRecording ? "🎤 Listening... Release to send" : isLoading ? "🤖 AI is responding..." : "Press and hold to speak"}
               </p>
+            </div>
+            <div className="flex gap-3">
               <Button
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
@@ -534,20 +535,20 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                 onTouchStart={startVoiceRecording}
                 onTouchEnd={stopVoiceRecording}
                 disabled={!isCameraOn || isLoading}
-                className="gap-2 h-16 w-16 rounded-full"
+                className="gap-2 h-20 w-20 rounded-full"
               >
-                {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                {isRecording ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={stopInterview} 
+                className="gap-2"
+                size="lg"
+              >
+                <Square className="w-4 h-4" />
+                End Interview
               </Button>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={stopInterview} 
-              className="gap-2"
-              size="lg"
-            >
-              <Square className="w-4 h-4" />
-              End Interview
-            </Button>
           </div>
         </div>
       )}
