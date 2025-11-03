@@ -570,17 +570,14 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           <div className="flex flex-col items-center gap-4">
             <div className="text-center space-y-2">
               <p className="text-sm font-medium">
-                {isRecording ? "🎤 Listening... Release to send" : isLoading ? "🤖 AI is responding..." : "Press and hold to speak"}
+                {isRecording ? "🎤 Recording... Click to stop and send" : isLoading ? "🤖 AI is responding..." : "Click microphone to start speaking"}
               </p>
             </div>
             <div className="flex gap-3">
               <Button
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
-                onMouseDown={startVoiceRecording}
-                onMouseUp={stopVoiceRecording}
-                onTouchStart={startVoiceRecording}
-                onTouchEnd={stopVoiceRecording}
+                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
                 disabled={!isCameraOn || isLoading}
                 className="gap-2 h-20 w-20 rounded-full"
               >
