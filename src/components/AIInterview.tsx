@@ -229,6 +229,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setIsLoading(true);
 
     try {
+      await startCamera();
       await streamChat([]);
     } catch (error) {
       console.error("Error starting interview:", error);
@@ -403,12 +404,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
-              <Video className="w-8 h-8 text-accent" />
+              <Mic className="w-8 h-8 text-accent" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-bold">AI Behavioral Interview</h3>
+              <h3 className="font-bold">Voice-Only AI Interview</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Practice with camera and voice for real-time behavioral analysis including body language, facial expressions, and communication style
+                Speak naturally with our AI interviewer. Camera tracks your body language and facial expressions for behavioral feedback.
               </p>
             </div>
             <Button 
@@ -418,7 +419,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
               disabled={!jobTitle.trim()}
             >
               <Sparkles className="w-5 h-5" />
-              Start Behavioral Interview
+              Start Voice Interview
             </Button>
           </div>
         </div>
@@ -519,32 +520,33 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             </div>
           </div>
 
-          {/* Text Input */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type your response..."
-              className="flex-1"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-              disabled={isLoading}
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!inputValue.trim() || isLoading}
+          {/* Voice Control */}
+          <div className="flex justify-center gap-3">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {isRecording ? "Speaking... Release to send" : "Hold to speak"}
+              </p>
+              <Button
+                size="lg"
+                variant={isRecording ? "destructive" : "default"}
+                onMouseDown={startVoiceRecording}
+                onMouseUp={stopVoiceRecording}
+                onTouchStart={startVoiceRecording}
+                onTouchEnd={stopVoiceRecording}
+                disabled={!isCameraOn || isLoading}
+                className="gap-2 h-16 w-16 rounded-full"
+              >
+                {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+              </Button>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={stopInterview} 
               className="gap-2"
+              size="lg"
             >
-              <Send className="w-4 h-4" />
-              Send
-            </Button>
-            <Button variant="destructive" onClick={stopInterview} className="gap-2">
               <Square className="w-4 h-4" />
-              End
+              End Interview
             </Button>
           </div>
         </div>
