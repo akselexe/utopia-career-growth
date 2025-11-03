@@ -156,22 +156,46 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
     try {
       audioChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(mediaStreamRef.current);
+      
+      // Create a new MediaRecorder with the audio track from the stream
+      const audioTracks = mediaStreamRef.current.getAudioTracks();
+      if (audioTracks.length === 0) {
+        throw new Error("No audio track available");
+      }
+      
+      const mediaRecorder = new MediaRecorder(mediaStreamRef.current, {
+        mimeType: 'audio/webm',
+      });
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+          console.log("Audio chunk received:", event.data.size, "bytes");
         }
       };
       
       mediaRecorder.onstop = async () => {
+        console.log("Recording stopped, total chunks:", audioChunksRef.current.length);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processVoiceInput(audioBlob);
+        console.log("Audio blob size:", audioBlob.size, "bytes");
+        
+        if (audioBlob.size > 0) {
+          await processVoiceInput(audioBlob);
+        } else {
+          toast({
+            title: "No Audio",
+            description: "No audio was recorded. Please try again.",
+            variant: "destructive",
+          });
+        }
       };
       
-      mediaRecorder.start();
+      // Start recording with time slices for better chunking
+      mediaRecorder.start(100);
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
+      
+      console.log("Recording started");
     } catch (error) {
       console.error("Error starting recording:", error);
       toast({
@@ -193,27 +217,51 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setIsLoading(true);
     
     try {
+      console.log("Processing audio blob...");
+      
       // Convert audio to base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Audio = reader.result as string;
+        console.log("Base64 audio length:", base64Audio.length);
         
         // Transcribe audio
+        console.log("Calling transcribe-audio function...");
         const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke('transcribe-audio', {
           body: { audio: base64Audio.split(',')[1] }
         });
         
-        if (transcriptError || !transcriptData?.text) {
-          throw new Error("Failed to transcribe audio");
+        console.log("Transcription response:", transcriptData, transcriptError);
+        
+        if (transcriptError) {
+          throw new Error(transcriptError.message || "Transcription service error");
         }
         
-        const transcribedText = transcriptData.text;
-        setInputValue(transcribedText);
+        if (!transcriptData?.text) {
+          throw new Error("No transcription returned");
+        }
+        
+        const transcribedText = transcriptData.text.trim();
+        console.log("Transcribed text:", transcribedText);
+        
+        if (!transcribedText) {
+          toast({
+            title: "No speech detected",
+            description: "Please speak clearly and try again.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
         
         // Send as message
         const userMessage: Message = { role: "user", content: transcribedText };
         setMessages((prev) => [...prev, userMessage]);
-        setInputValue("");
+        
+        toast({
+          title: "You said:",
+          description: transcribedText,
+        });
         
         await streamChat([...messages, userMessage]);
       };
@@ -223,10 +271,9 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       console.error("Error processing voice:", error);
       toast({
         title: "Error",
-        description: "Failed to process voice input",
+        description: error instanceof Error ? error.message : "Failed to process voice input",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
