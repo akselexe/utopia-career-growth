@@ -2,3 +2,18 @@ project_id = "dyuolofkorxwqyjwgymb"
 
 [functions.analyze-cv]
 verify_jwt = true
+
+[functions.match-jobs]
+verify_jwt = true
+
+[functions.get-realtime-token]
+verify_jwt = true
+
+[functions.interview-chat]
+verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+[functions.analyze-behavior]
+verify_jwt = true

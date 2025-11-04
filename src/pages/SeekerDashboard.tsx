@@ -54,9 +54,19 @@ const SeekerDashboard = () => {
             </Card>
           </Link>
 
+          <Link to="/matched-jobs">
+            <Card className="p-4 hover:shadow-md transition-all cursor-pointer h-full">
+              <div className="space-y-2">
+                <Sparkles className="w-8 h-8 text-accent" />
+                <h3 className="font-semibold">Smart Matches</h3>
+                <p className="text-sm text-muted-foreground">AI-powered job recommendations</p>
+              </div>
+            </Card>
+          </Link>
+
           <Card className="p-4 hover:shadow-md transition-all cursor-pointer">
             <div className="space-y-2">
-              <TrendingUp className="w-8 h-8 text-accent" />
+              <TrendingUp className="w-8 h-8 text-secondary" />
               <h3 className="font-semibold">Career Insights</h3>
               <p className="text-sm text-muted-foreground">Track your progress</p>
             </div>

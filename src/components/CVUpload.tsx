@@ -135,8 +135,30 @@ export const CVUpload = ({ userId }: { userId: string }) => {
       
       toast({
         title: "CV Analyzed Successfully!",
-        description: `Your CV scored ${aiData.analysis.score}/100`,
+        description: `Your CV scored ${aiData.analysis.score}/100. Finding matching jobs...`,
       });
+
+      // Trigger automatic job matching
+      try {
+        const { data: matchData, error: matchError } = await supabase.functions.invoke('match-jobs', {
+          body: { 
+            cvAnalysis: aiData.analysis,
+            userId: userId
+          },
+        });
+
+        if (matchError) {
+          console.error('Job matching error:', matchError);
+        } else if (matchData?.matches) {
+          toast({
+            title: "Job Matches Found!",
+            description: `Found ${matchData.matches.length} jobs matching your profile (≥70% match)`,
+          });
+        }
+      } catch (matchError) {
+        console.error('Failed to match jobs:', matchError);
+        // Don't show error to user - matching is a bonus feature
+      }
 
     } catch (error) {
       console.error('CV upload error:', error);
