@@ -38,22 +38,79 @@ serve(async (req) => {
 
     console.log('Matching jobs for user:', userId);
 
-    // Get all active jobs
-    const { data: jobs, error: jobsError } = await supabase
+    // Get internal active jobs
+    const { data: internalJobs, error: jobsError } = await supabase
       .from('jobs')
       .select('*')
       .eq('status', 'active');
 
     if (jobsError) throw jobsError;
 
-    if (!jobs || jobs.length === 0) {
+    const allJobs = [...(internalJobs || [])];
+
+    // Fetch external jobs from JSearch API (MENA region)
+    const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY');
+    if (RAPIDAPI_KEY) {
+      try {
+        // MENA region countries
+        const menaCountries = ['ae', 'sa', 'eg', 'ma', 'qa', 'kw', 'om', 'bh', 'jo', 'lb'];
+        
+        for (const country of menaCountries.slice(0, 3)) { // Fetch from top 3 countries to avoid rate limits
+          try {
+            const searchQuery = cvAnalysis.strengths?.join(' ') || 'jobs';
+            const response = await fetch(
+              `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(searchQuery)}&page=1&num_pages=1&country=${country}&date_posted=month`,
+              {
+                method: 'GET',
+                headers: {
+                  'x-rapidapi-host': 'jsearch.p.rapidapi.com',
+                  'x-rapidapi-key': RAPIDAPI_KEY,
+                },
+              }
+            );
+
+            if (response.ok) {
+              const externalData = await response.json();
+              const externalJobs = externalData.data || [];
+              
+              // Map external jobs to internal format
+              for (const job of externalJobs.slice(0, 20)) { // Limit per country
+                allJobs.push({
+                  id: `external_${job.job_id}`,
+                  title: job.job_title || 'N/A',
+                  description: job.job_description || job.job_highlights?.Qualifications?.join('. ') || 'No description available',
+                  location: job.job_city || job.job_country || 'Remote',
+                  requirements: job.job_highlights?.Qualifications?.join(', ') || 'Not specified',
+                  salary_min: job.job_min_salary || null,
+                  salary_max: job.job_max_salary || null,
+                  skills_required: job.job_required_skills || [],
+                  company_id: null, // External job
+                  status: 'active',
+                  job_type: job.job_employment_type || 'Full-time',
+                  external_url: job.job_apply_link || job.job_google_link,
+                  external_source: 'jsearch'
+                });
+              }
+              
+              console.log(`Fetched ${externalJobs.length} jobs from ${country.toUpperCase()}`);
+            }
+          } catch (countryError) {
+            console.error(`Error fetching jobs from ${country}:`, countryError);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching external jobs:', error);
+      }
+    }
+
+    if (allJobs.length === 0) {
       return new Response(
-        JSON.stringify({ matches: [], message: 'No active jobs available' }),
+        JSON.stringify({ matches: [], message: 'No jobs available for matching' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Found ${jobs.length} active jobs to match`);
+    console.log(`Found ${allJobs.length} total jobs to match (internal + external)`);
 
     // Extract CV skills from analysis
     const cvSkills = cvAnalysis.strengths?.join(', ') || '';
@@ -62,7 +119,7 @@ serve(async (req) => {
     // Match each job using AI
     const matches = [];
 
-    for (const job of jobs) {
+    for (const job of allJobs) {
       try {
         const matchPrompt = `
 You are a job matching expert. Analyze the match between this candidate's CV and the job posting.
@@ -150,7 +207,10 @@ Respond with JSON only:
             matching_skills: matchData.matching_skills || [],
             missing_skills: matchData.missing_skills || [],
             recommendation: matchData.recommendation || '',
-            job_details: job
+            job_details: job,
+            external_url: job.external_url || null,
+            external_source: job.external_source || null,
+            is_external: !job.company_id
           });
         }
 
@@ -165,8 +225,8 @@ Respond with JSON only:
 
     console.log(`Found ${matches.length} matches above 70%`);
 
-    // Create application records for top matches
-    const topMatches = matches.slice(0, 10); // Store top 10 matches
+    // Create application records for top internal job matches only
+    const topMatches = matches.filter(m => !m.is_external).slice(0, 10);
     
     for (const match of topMatches) {
       try {

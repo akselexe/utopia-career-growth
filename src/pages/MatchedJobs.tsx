@@ -15,8 +15,10 @@ interface Job {
   location: string;
   salary_min?: number;
   salary_max?: number;
-  company_id: string;
+  company_id: string | null;
   skills_required?: string[];
+  external_url?: string;
+  external_source?: string;
 }
 
 interface MatchedJob {
@@ -175,12 +177,25 @@ export default function MatchedJobs() {
                 )}
 
                 <div className="flex items-center gap-2 pt-4 border-t">
-                  <Button onClick={() => navigate(`/jobs`)}>
-                    View All Jobs
-                  </Button>
+                  {match.jobs.external_url ? (
+                    <Button 
+                      onClick={() => window.open(match.jobs.external_url, '_blank')}
+                    >
+                      Apply on {match.jobs.external_source === 'jsearch' ? 'Job Platform' : 'External Site'}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => navigate(`/jobs`)}>
+                      View All Jobs
+                    </Button>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     Matched {new Date(match.created_at).toLocaleDateString()}
                   </span>
+                  {match.jobs.external_source && (
+                    <Badge variant="secondary" className="ml-auto">
+                      External Job
+                    </Badge>
+                  )}
                 </div>
               </Card>
             ))}
