@@ -244,36 +244,87 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const captureAndAnalyzeFrame = async () => {
-    if (!videoRef.current || !isCameraOn) return;
+    console.log("captureAndAnalyzeFrame called, isCameraOn:", isCameraOn, "videoRef:", !!videoRef.current);
+    
+    if (!videoRef.current || !isCameraOn) {
+      console.log("Early return - no video or camera off");
+      return;
+    }
+    
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
+    
+    console.log("Video dimensions:", videoWidth, "x", videoHeight);
+    
+    if (videoWidth === 0 || videoHeight === 0) {
+      console.log("Video dimensions invalid, skipping analysis");
+      return;
+    }
     
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
     const ctx = canvas.getContext('2d');
     
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
+    if (!ctx) {
+      console.error("Could not get canvas context");
+      return;
+    }
+    
+    try {
+      ctx.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+      console.log("Image drawn to canvas");
+      
       canvas.toBlob(async (blob) => {
-        if (blob) {
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const base64Image = reader.result as string;
-            
-            try {
-              const { data, error } = await supabase.functions.invoke('analyze-behavior', {
-                body: { image: base64Image.split(',')[1] }
-              });
-              
-              if (data?.feedback) {
-                setBehavioralFeedback(prev => [...prev, data.feedback].slice(-5));
-              }
-            } catch (error) {
-              console.error("Behavioral analysis error:", error);
-            }
-          };
-          reader.readAsDataURL(blob);
+        if (!blob) {
+          console.error("Failed to create blob from canvas");
+          return;
         }
-      });
+        
+        console.log("Blob created, size:", blob.size);
+        
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Image = reader.result as string;
+          console.log("Base64 image length:", base64Image.length);
+          
+          try {
+            console.log("Calling analyze-behavior function...");
+            const { data, error } = await supabase.functions.invoke('analyze-behavior', {
+              body: { image: base64Image.split(',')[1] }
+            });
+            
+            console.log("Behavioral analysis response:", data, error);
+            
+            if (error) {
+              console.error("Behavioral analysis error:", error);
+              return;
+            }
+            
+            if (data?.feedback) {
+              console.log("Adding behavioral feedback:", data.feedback);
+              setBehavioralFeedback(prev => [...prev, data.feedback].slice(-5));
+              
+              // Show feedback as toast
+              toast({
+                title: "Behavioral Feedback",
+                description: data.feedback,
+                variant: "default",
+              });
+            }
+          } catch (error) {
+            console.error("Behavioral analysis exception:", error);
+          }
+        };
+        
+        reader.onerror = (error) => {
+          console.error("FileReader error:", error);
+        };
+        
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.8);
+    } catch (error) {
+      console.error("Error in captureAndAnalyzeFrame:", error);
     }
   };
 
