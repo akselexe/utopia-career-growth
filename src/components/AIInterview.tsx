@@ -43,54 +43,187 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user"
-        }, 
+      console.log("Starting camera...");
+
+      // Stop any existing stream first
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          facingMode: "user",
+          frameRate: { ideal: 30, min: 15 }
+        },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
         }
       });
-      
+
+      console.log("Camera stream obtained successfully");
+      // Enable all tracks
+      stream.getTracks().forEach(track => track.enabled = true);
       mediaStreamRef.current = stream;
-      
+
       if (videoRef.current) {
+        console.log("Setting up video element...");
+
+        // Clear any existing srcObject
+        videoRef.current.srcObject = null;
+
+        // Set new stream
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current?.play();
-            console.log("Video playing successfully");
-            setIsCameraOn(true);
-          } catch (playError) {
-            console.error("Error playing video:", playError);
-            toast({
-              title: "Video Error",
-              description: "Could not start video playback.",
-              variant: "destructive",
+        videoRef.current.playsInline = true;
+        videoRef.current.autoplay = true;
+
+        console.log("Video element configured, stream assigned");
+
+        // Set up event listeners for debugging
+        const onLoadedMetadata = () => {
+          console.log("Video metadata loaded, dimensions:", videoRef.current?.videoWidth, "x", videoRef.current?.videoHeight);
+        };
+
+        const onCanPlay = () => {
+          console.log("Video can play");
+        };
+
+        const onPlay = () => {
+          console.log("Video started playing");
+          console.log("Video element dimensions:", videoRef.current?.clientWidth, "x", videoRef.current?.clientHeight);
+          console.log("Video natural dimensions:", videoRef.current?.videoWidth, "x", videoRef.current?.videoHeight);
+          console.log("Video readyState:", videoRef.current?.readyState);
+          console.log("Video networkState:", videoRef.current?.networkState);
+          console.log("Video srcObject:", videoRef.current?.srcObject);
+          console.log("Video currentTime:", videoRef.current?.currentTime);
+          console.log("Video paused:", videoRef.current?.paused);
+          console.log("Video ended:", videoRef.current?.ended);
+
+          // Check computed styles
+          if (videoRef.current) {
+            const computedStyle = window.getComputedStyle(videoRef.current);
+            console.log("Video computed styles:", {
+              display: computedStyle.display,
+              visibility: computedStyle.visibility,
+              opacity: computedStyle.opacity,
+              width: computedStyle.width,
+              height: computedStyle.height,
+              position: computedStyle.position,
+              zIndex: computedStyle.zIndex
+            });
+
+            // Check if video element is actually visible in DOM
+            const rect = videoRef.current.getBoundingClientRect();
+            console.log("Video bounding rect:", rect);
+            console.log("Video is visible:", rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0);
+          }
+
+          setIsCameraOn(true);
+
+          // Start behavioral analysis after video is confirmed playing
+          if (analysisIntervalRef.current) {
+            clearInterval(analysisIntervalRef.current);
+          }
+          analysisIntervalRef.current = setInterval(() => {
+            captureAndAnalyzeFrame();
+          }, 10000);
+        };
+
+        const onError = (e: Event) => {
+          console.error("Video element error:", e);
+          setIsCameraOn(false);
+          toast({
+            title: "Video Error",
+            description: "Could not start video playback. Audio recording will still work.",
+            variant: "destructive",
+          });
+        };
+
+        // Add event listeners
+        videoRef.current.addEventListener('loadedmetadata', onLoadedMetadata);
+        videoRef.current.addEventListener('canplay', onCanPlay);
+        videoRef.current.addEventListener('play', onPlay);
+        videoRef.current.addEventListener('error', onError);
+
+        // Try to play immediately
+        try {
+          const playPromise = videoRef.current.play();
+          console.log("Play promise created");
+
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              console.log("Play promise resolved");
+            }).catch((playError) => {
+              console.error("Play promise rejected:", playError);
+              // Fallback: try playing after a short delay
+              setTimeout(() => {
+                if (videoRef.current) {
+                  videoRef.current.play().catch((fallbackError) => {
+                    console.error("Fallback play also failed:", fallbackError);
+                    setIsCameraOn(false);
+                    toast({
+                      title: "Video Error",
+                      description: "Could not start video playback. Audio recording will still work.",
+                      variant: "destructive",
+                    });
+                  });
+                }
+              }, 100);
             });
           }
+        } catch (immediatePlayError) {
+          console.error("Immediate play failed:", immediatePlayError);
+          setIsCameraOn(false);
+        }
+
+        // Cleanup function to remove event listeners
+        const cleanup = () => {
+          if (videoRef.current) {
+            videoRef.current.removeEventListener('loadedmetadata', onLoadedMetadata);
+            videoRef.current.removeEventListener('canplay', onCanPlay);
+            videoRef.current.removeEventListener('play', onPlay);
+            videoRef.current.removeEventListener('error', onError);
+          }
         };
+
+        // Store cleanup for later use
+        (videoRef.current as any)._cleanup = cleanup;
       }
-      
-      // Start periodic behavioral analysis
-      analysisIntervalRef.current = setInterval(() => {
-        captureAndAnalyzeFrame();
-      }, 10000);
-      
+
     } catch (error) {
       console.error("Error accessing camera:", error);
-      toast({
-        title: "Camera Error",
-        description: "Could not access camera. Please check permissions.",
-        variant: "destructive",
-      });
+
+      // Try to get audio-only permissions as fallback
+      try {
+        console.log("Trying audio-only fallback...");
+        const audioOnlyStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        mediaStreamRef.current = audioOnlyStream;
+        console.log("Audio-only stream obtained successfully");
+
+        toast({
+          title: "Camera Unavailable",
+          description: "Video camera not available, but audio recording will work.",
+          variant: "default",
+        });
+      } catch (audioError) {
+        console.error("Audio permissions also failed:", audioError);
+        toast({
+          title: "Media Access Error",
+          description: "Could not access camera or microphone. Please check permissions.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -146,48 +279,112 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
   const startVoiceRecording = async () => {
     console.log("startVoiceRecording called");
+    
+    // Cancel any ongoing AI speech
+    if (speechSynthesisRef.current) {
+      window.speechSynthesis.cancel();
+    }
+
     console.log("mediaStreamRef.current:", mediaStreamRef.current);
     console.log("isCameraOn:", isCameraOn);
-    
+
+    // If no media stream, try to get audio permissions on demand
     if (!mediaStreamRef.current) {
-      console.error("No media stream available");
-      toast({
-        title: "Camera Required",
-        description: "Please enable camera first to use voice recording.",
-        variant: "destructive",
-      });
-      return;
+      console.log("No media stream available, trying to get audio permissions...");
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        // Enable all tracks
+        audioStream.getTracks().forEach(track => track.enabled = true);
+        mediaStreamRef.current = audioStream;
+        console.log("Audio permissions granted on demand, tracks enabled");
+      } catch (audioError) {
+        console.error("Audio permissions denied:", audioError);
+        toast({
+          title: "Microphone Access Required",
+          description: "Please allow microphone access to use voice recording.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
+      // Clean up any existing MediaRecorder
+      if (mediaRecorderRef.current) {
+        console.log("Cleaning up existing MediaRecorder, state:", mediaRecorderRef.current.state);
+        if (mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+        mediaRecorderRef.current = null;
+      }
+
       audioChunksRef.current = [];
-      
+
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        throw new Error("MediaRecorder is not supported in this browser");
+      }
+
       // Create a new MediaRecorder with the audio track from the stream
       const audioTracks = mediaStreamRef.current.getAudioTracks();
       console.log("Audio tracks:", audioTracks.length);
-      
+
       if (audioTracks.length === 0) {
-        throw new Error("No audio track available");
+        throw new Error("No audio track available. Please check microphone permissions.");
       }
-      
-      const mediaRecorder = new MediaRecorder(mediaStreamRef.current, {
-        mimeType: 'audio/webm',
+
+      // Log supported MIME types for debugging
+      const supportedTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/wav'];
+      console.log("Checking supported MIME types:");
+      supportedTypes.forEach(type => {
+        console.log(`${type}: ${MediaRecorder.isTypeSupported(type)}`);
       });
-      
-      console.log("MediaRecorder created");
-      
+
+      // Try to create MediaRecorder without specifying MIME type first
+      let mediaRecorder: MediaRecorder;
+      let mimeType = ''; // Declare mimeType here so it's accessible in onstop handler
+      try {
+        mediaRecorder = new MediaRecorder(mediaStreamRef.current);
+        console.log("MediaRecorder created without MIME type");
+      } catch (noMimeError) {
+        console.error("Failed to create MediaRecorder without MIME type:", noMimeError);
+
+        // Fallback: try with supported MIME types
+        for (const type of supportedTypes) {
+          if (MediaRecorder.isTypeSupported(type)) {
+            mimeType = type;
+            break;
+          }
+        }
+
+        if (!mimeType) {
+          throw new Error("No supported audio MIME types found in this browser");
+        }
+
+        console.log("Trying with MIME type:", mimeType);
+        mediaRecorder = new MediaRecorder(mediaStreamRef.current, { mimeType });
+      }
+
+      console.log("MediaRecorder created with state:", mediaRecorder.state);
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
           console.log("Audio chunk received:", event.data.size, "bytes");
         }
       };
-      
+
       mediaRecorder.onstop = async () => {
         console.log("Recording stopped, total chunks:", audioChunksRef.current.length);
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
         console.log("Audio blob size:", audioBlob.size, "bytes");
-        
+
         if (audioBlob.size > 0) {
           await processVoiceInput(audioBlob);
         } else {
@@ -198,13 +395,48 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           });
         }
       };
-      
-      // Start recording with time slices for better chunking
-      mediaRecorder.start(100);
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecording(true);
-      
-      console.log("Recording started successfully");
+
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        toast({
+          title: "Recording Error",
+          description: "An error occurred during recording.",
+          variant: "destructive",
+        });
+        setIsRecording(false);
+      };
+
+      // Wait for MediaRecorder to be ready
+      await new Promise(resolve => {
+        const checkState = () => {
+          if (mediaRecorder.state === 'inactive') {
+            resolve(void 0);
+          } else if (mediaRecorder.state === 'recording') {
+            // If somehow already recording, stop it first
+            mediaRecorder.stop();
+            setTimeout(checkState, 50);
+          } else {
+            setTimeout(checkState, 50);
+          }
+        };
+        checkState();
+      });
+
+      try {
+        // Start recording without time slices for simplicity
+        mediaRecorder.start();
+        mediaRecorderRef.current = mediaRecorder;
+        setIsRecording(true);
+        console.log("Recording started successfully");
+      } catch (startError) {
+        console.error("Failed to start MediaRecorder:", startError);
+        toast({
+          title: "Recording Failed",
+          description: "Could not start audio recording. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
     } catch (error) {
       console.error("Error starting recording:", error);
       toast({
@@ -301,14 +533,14 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setIsLoading(true);
 
     try {
-      // Start camera first
+      // Start camera (which includes fallback to audio-only)
       await startCamera();
-      
+
       toast({
         title: "Interview Started",
         description: "AI will greet you shortly. Hold the mic button to respond.",
       });
-      
+
       // Then start the interview with AI greeting
       await streamChat([]);
     } catch (error) {
@@ -343,9 +575,15 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const streamChat = async (currentMessages: Message[]) => {
+    setIsLoading(true);
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/interview-chat`;
     
     try {
+      // Cancel any ongoing speech
+      if (speechSynthesisRef.current) {
+        window.speechSynthesis.cancel();
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -509,15 +747,14 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             {/* Video Feed */}
             <div className="lg:col-span-2 space-y-3">
               <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-                {isCameraOn ? (
-                  <video
-                    ref={videoRef}
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover mirror"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover mirror"
+                />
+                {!isCameraOn && (
+                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-muted">
                     <div className="text-center space-y-2">
                       <VideoOff className="w-12 h-12 mx-auto text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">Camera will start automatically</p>
@@ -587,7 +824,6 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
                 onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                disabled={!isCameraOn || isLoading}
                 className="gap-2 h-20 w-20 rounded-full"
               >
                 {isRecording ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
