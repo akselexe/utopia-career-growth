@@ -126,12 +126,24 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           setIsCameraOn(true);
 
           // Start behavioral analysis after video is confirmed playing
+          console.log("Setting up behavioral analysis interval...");
           if (analysisIntervalRef.current) {
             clearInterval(analysisIntervalRef.current);
           }
+          
+          // Start first capture immediately to test
+          setTimeout(() => {
+            console.log("Running first behavioral analysis...");
+            captureAndAnalyzeFrame();
+          }, 2000);
+          
+          // Then continue every 10 seconds
           analysisIntervalRef.current = setInterval(() => {
+            console.log("Interval triggered - calling captureAndAnalyzeFrame");
             captureAndAnalyzeFrame();
           }, 10000);
+          
+          console.log("Behavioral analysis interval set up successfully");
         };
 
         const onError = (e: Event) => {
@@ -848,9 +860,24 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                 </h3>
                 <div className="space-y-2">
                   {behavioralFeedback.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Enable camera to receive real-time behavioral feedback
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        {isCameraOn ? "Analyzing your body language..." : "Enable camera to receive behavioral feedback"}
+                      </p>
+                      {isCameraOn && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            console.log("Manual test triggered");
+                            captureAndAnalyzeFrame();
+                          }}
+                          className="w-full"
+                        >
+                          Test Analysis Now
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     behavioralFeedback.map((feedback, i) => (
                       <div key={i} className="text-sm p-2 bg-background rounded border border-border">
