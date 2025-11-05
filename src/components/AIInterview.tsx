@@ -19,6 +19,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [behavioralFeedback, setBehavioralFeedback] = useState<string[]>([]);
+  const [showReport, setShowReport] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -123,25 +124,26 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             console.log("Video is visible:", rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0);
           }
 
-          setIsCameraOn(true);
-
           // Start behavioral analysis after video is confirmed playing
           console.log("Setting up behavioral analysis interval...");
           if (analysisIntervalRef.current) {
             clearInterval(analysisIntervalRef.current);
           }
           
-          // Start first capture immediately to test
+          // Set camera on BEFORE starting analysis
+          setIsCameraOn(true);
+          
+          // Start first capture after a short delay to ensure state is updated
           setTimeout(() => {
             console.log("Running first behavioral analysis...");
             captureAndAnalyzeFrame();
-          }, 2000);
+          }, 3000);
           
-          // Then continue every 10 seconds
+          // Then continue every 15 seconds
           analysisIntervalRef.current = setInterval(() => {
             console.log("Interval triggered - calling captureAndAnalyzeFrame");
             captureAndAnalyzeFrame();
-          }, 10000);
+          }, 15000);
           
           console.log("Behavioral analysis interval set up successfully");
         };
@@ -256,10 +258,10 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const captureAndAnalyzeFrame = async () => {
-    console.log("captureAndAnalyzeFrame called, isCameraOn:", isCameraOn, "videoRef:", !!videoRef.current);
+    console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
     
-    if (!videoRef.current || !isCameraOn) {
-      console.log("Early return - no video or camera off");
+    if (!videoRef.current || !videoRef.current.srcObject) {
+      console.log("Early return - no video or no stream");
       return;
     }
     
@@ -315,14 +317,8 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             
             if (data?.feedback) {
               console.log("Adding behavioral feedback:", data.feedback);
-              setBehavioralFeedback(prev => [...prev, data.feedback].slice(-5));
-              
-              // Show feedback as toast
-              toast({
-                title: "Behavioral Feedback",
-                description: data.feedback,
-                variant: "default",
-              });
+              // Store feedback silently during interview
+              setBehavioralFeedback(prev => [...prev, data.feedback]);
             }
           } catch (error) {
             console.error("Behavioral analysis exception:", error);
@@ -751,12 +747,23 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setHasStarted(false);
     setMessages([]);
     setInputValue("");
-    setBehavioralFeedback([]);
+    
+    // Show report if we have behavioral feedback
+    if (behavioralFeedback.length > 0) {
+      setShowReport(true);
+    }
     
     toast({
       title: "Interview Complete!",
-      description: "Good job practicing!",
+      description: behavioralFeedback.length > 0 
+        ? "Check your behavioral analysis report below!" 
+        : "Good job practicing!",
     });
+  };
+
+  const closeReport = () => {
+    setShowReport(false);
+    setBehavioralFeedback([]);
   };
 
   return (
@@ -851,42 +858,45 @@ export const AIInterview = ({ userId }: { userId: string }) => {
               </div>
             </div>
 
-            {/* Behavioral Feedback Sidebar */}
+            {/* Behavioral Analysis Sidebar */}
             <div className="space-y-3">
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-accent" />
-                  Behavioral Analysis
-                </h3>
-                <div className="space-y-2">
-                  {behavioralFeedback.length === 0 ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        {isCameraOn ? "Analyzing your body language..." : "Enable camera to receive behavioral feedback"}
-                      </p>
-                      {isCameraOn && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            console.log("Manual test triggered");
-                            captureAndAnalyzeFrame();
-                          }}
-                          className="w-full"
-                        >
-                          Test Analysis Now
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    behavioralFeedback.map((feedback, i) => (
-                      <div key={i} className="text-sm p-2 bg-background rounded border border-border">
-                        {feedback}
-                      </div>
-                    ))
-                  )}
+              {/* Show status during interview */}
+              {hasStarted && !showReport && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-accent" />
+                    Behavioral Analysis
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isCameraOn 
+                      ? `Analyzing your body language... (${behavioralFeedback.length} analysis${behavioralFeedback.length !== 1 ? 'es' : ''} captured)` 
+                      : "Enable camera for behavioral analysis"}
+                  </p>
                 </div>
-              </div>
+              )}
+              
+              {/* Show report after interview */}
+              {showReport && behavioralFeedback.length > 0 && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                      Behavioral Analysis Report
+                    </h3>
+                    <Button size="sm" variant="ghost" onClick={closeReport}>
+                      Close
+                    </Button>
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {behavioralFeedback.map((feedback, i) => (
+                      <div key={i} className="text-sm p-3 bg-background rounded border border-border">
+                        <span className="font-medium text-primary">Analysis {i + 1}:</span>
+                        <p className="mt-1 whitespace-pre-wrap">{feedback}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
