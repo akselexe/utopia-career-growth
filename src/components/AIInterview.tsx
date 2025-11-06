@@ -744,21 +744,23 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
   const stopInterview = () => {
     stopCamera();
-    setHasStarted(false);
     setMessages([]);
     setInputValue("");
     
     // Show report if we have behavioral feedback
     if (behavioralFeedback.length > 0) {
       setShowReport(true);
+      toast({
+        title: "Interview Complete!",
+        description: "Your behavioral analysis report is ready!",
+      });
+    } else {
+      setHasStarted(false);
+      toast({
+        title: "Interview Complete!",
+        description: "Good job practicing!",
+      });
     }
-    
-    toast({
-      title: "Interview Complete!",
-      description: behavioralFeedback.length > 0 
-        ? "Check your behavioral analysis report below!" 
-        : "Good job practicing!",
-    });
   };
 
   const closeReport = () => {
@@ -861,7 +863,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             {/* Behavioral Analysis Sidebar */}
             <div className="space-y-3">
               {/* Show status during interview */}
-              {hasStarted && !showReport && (
+              {!showReport && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-accent" />
@@ -877,21 +879,24 @@ export const AIInterview = ({ userId }: { userId: string }) => {
               
               {/* Show report after interview */}
               {showReport && behavioralFeedback.length > 0 && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-accent" />
+                <div className="bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/30 rounded-lg p-6 shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-accent" />
                       Behavioral Analysis Report
                     </h3>
-                    <Button size="sm" variant="ghost" onClick={closeReport}>
-                      Close
+                    <Button size="sm" variant="outline" onClick={closeReport}>
+                      Close & Reset
                     </Button>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Based on {behavioralFeedback.length} analysis{behavioralFeedback.length !== 1 ? 'es' : ''} during your interview
+                  </p>
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
                     {behavioralFeedback.map((feedback, i) => (
-                      <div key={i} className="text-sm p-3 bg-background rounded border border-border">
-                        <span className="font-medium text-primary">Analysis {i + 1}:</span>
-                        <p className="mt-1 whitespace-pre-wrap">{feedback}</p>
+                      <div key={i} className="text-sm p-4 bg-background/80 backdrop-blur rounded-lg border border-border shadow-sm">
+                        <span className="font-semibold text-primary">Analysis {i + 1}</span>
+                        <p className="mt-2 whitespace-pre-wrap leading-relaxed">{feedback}</p>
                       </div>
                     ))}
                   </div>
