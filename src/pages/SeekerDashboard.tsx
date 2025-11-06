@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
+import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight, BarChart3, Lightbulb } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip as RechartTooltip } from 'recharts';
+import ReactMarkdown from 'react-markdown';
 
 const SeekerDashboard = () => {
   const { user, signOut, loading } = useAuth();
@@ -19,6 +20,8 @@ const SeekerDashboard = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [applicationsSeries, setApplicationsSeries] = useState<any[]>([]);
+  const [careerInsights, setCareerInsights] = useState<string | null>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,6 +36,36 @@ const SeekerDashboard = () => {
       loadRecentActivity();
     }
   }, [user]);
+
+  const generateCareerInsights = async () => {
+    if (!user) return;
+    setLoadingInsights(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('career-insights', {
+        body: {
+          cvAnalysis: latestCV?.ai_analysis,
+          applications: stats.applications,
+          profile: { completeness: latestCV?.ai_score || 45 }
+        }
+      });
+
+      if (error) throw error;
+      setCareerInsights(data.insights);
+      toast({
+        title: "Career Insights Generated",
+        description: "Your personalized career report is ready.",
+      });
+    } catch (error) {
+      console.error('Error generating career insights:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate career insights. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
 
   const loadRecentActivity = async () => {
     if (!user) return;
@@ -139,85 +172,137 @@ const SeekerDashboard = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-x-hidden">
-        {/* Subtle decorative background shapes */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="w-[40vw] h-[40vw] bg-gradient-to-tr from-orange-200/10 via-blue-200/8 to-violet-200/8 rounded-full blur-2xl absolute -top-24 -left-24" />
-          <div className="w-[28vw] h-[28vw] bg-gradient-to-br from-yellow-200/8 via-amber-200/8 to-violet-200/6 rounded-full blur-xl absolute top-1/2 right-0 opacity-60" />
-        </div>
-        {/* Header */}
-        <div className="border-b bg-card/80 backdrop-blur-sm z-10 relative">
-          <div className="container mx-auto px-4 py-5 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground mt-1">Welcome back, track your career progress</p>
+      <div className="min-h-screen bg-background">
+        {/* Header with Navbar */}
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-6">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex items-center gap-8">
+                <Link to="/dashboard/seeker" className="flex items-center gap-2">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                  <span className="font-semibold text-lg">Career Hub</span>
+                </Link>
+                <nav className="hidden md:flex items-center gap-6">
+                  <Link to="/cv-review" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    CV Review
+                  </Link>
+                  <Link to="/ai-interview" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    AI Interview
+                  </Link>
+                  <Link to="/job-matcher" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    Job Matcher
+                  </Link>
+                </nav>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={signOut}
-              className="gap-2 rounded-md px-3 py-1 border hover:bg-primary/5 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
           </div>
-        </div>
+        </header>
 
-        <div className="container mx-auto px-4 py-12 relative z-10">
-          {/* Main Tools Grid */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-10">
-            <Link to="/cv-review" className="group">
-              <Card className="p-6 h-full border-0 bg-white/30 backdrop-blur-sm shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-primary" />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1 text-foreground">CV Review</h3>
-                <p className="text-sm text-muted-foreground">
-                  Get AI-powered analysis and improvement suggestions for your CV
-                </p>
-              </Card>
-            </Link>
+        {/* Main Content */}
+        <main className="container mx-auto px-6 py-8">
+          {/* Hero Section */}
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold mb-2">Career Insights Dashboard</h1>
+            <p className="text-muted-foreground text-lg">Strategic analysis for your career development</p>
+          </div>
 
-            <Link to="/ai-interview" className="group">
-              <Card className="p-6 h-full border-0 bg-white/30 backdrop-blur-sm shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Video className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1 text-foreground">AI Interview Practice</h3>
-                <p className="text-sm text-muted-foreground">
-                  Practice interviews with real-time behavioral feedback
-                </p>
-              </Card>
-            </Link>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Applications</p>
+                <FileText className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-3xl font-bold">{stats.applications}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total submitted</p>
+            </Card>
 
-            <Link to="/job-matcher" className="group">
-              <Card className="p-6 h-full border-0 bg-white/30 backdrop-blur-sm shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-amber-500" />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1 text-foreground">Job Matcher</h3>
-                <p className="text-sm text-muted-foreground">
-                  Find jobs tailored to your skills and experience
-                </p>
-              </Card>
-            </Link>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Strong Matches</p>
+                <Target className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-3xl font-bold">{stats.matches}</p>
+              <p className="text-xs text-muted-foreground mt-1">≥70% match score</p>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">CVs Analyzed</p>
+                <Sparkles className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-3xl font-bold">{stats.cvs}</p>
+              <p className="text-xs text-muted-foreground mt-1">AI reviewed</p>
+            </Card>
           </div>
 
           {/* Content Grid */}
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
+              {/* AI Career Insights */}
+              <Card className="p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Lightbulb className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Career Insights Report</h2>
+                      <p className="text-sm text-muted-foreground">AI-powered strategic career guidance</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={generateCareerInsights}
+                    disabled={loadingInsights || !latestCV}
+                    className="gap-2"
+                  >
+                    {loadingInsights ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Insights
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {careerInsights ? (
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{careerInsights}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Lightbulb className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      {latestCV 
+                        ? "Generate personalized career insights based on your profile and activity."
+                        : "Upload a CV first to unlock AI-powered career insights."}
+                    </p>
+                    {!latestCV && (
+                      <Link to="/cv-review">
+                        <Button variant="outline">Upload CV</Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </Card>
+
               {/* Profile Strength / Latest CV */}
-              <Card className="p-6 border-0 bg-white/40 backdrop-blur-sm shadow-md rounded-xl">
+              <Card className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-foreground">Profile Strength</h3>
                   <span className="text-2xl font-bold text-primary">{latestCV?.ai_score ?? 45}%</span>
@@ -274,102 +359,60 @@ const SeekerDashboard = () => {
                 )}
               </Card>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-6">
-                <Card
-                  onClick={() => setExpandedCard(expandedCard === 'applications' ? null : 'applications')}
-                  className={`p-6 border-0 text-center cursor-pointer rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 shadow-lg hover:scale-[1.04] transition-transform duration-300 ${expandedCard === 'applications' ? 'ring-4 ring-primary/40' : ''}`}
-                >
-                  <p className="text-4xl font-extrabold text-foreground mb-1">{stats.applications}</p>
-                  <p className="text-base text-muted-foreground">Applications</p>
-                  {expandedCard === 'applications' && (
-                    <div className="mt-4 h-32">
-                      {applicationsSeries.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={110}>
-                          <BarChart data={applicationsSeries}>
-                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                            <RechartTooltip />
-                            <Bar dataKey="count" fill="#2563eb" className="transition-all duration-500" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <p className="text-base text-muted-foreground">No recent application data</p>
-                      )}
-                    </div>
-                  )}
+              {/* Application Activity Chart */}
+              {applicationsSeries.length > 0 && (
+                <Card className="p-8">
+                  <h3 className="text-xl font-bold mb-6">Application Activity</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={applicationsSeries}>
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                      <RechartTooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </Card>
+              )}
 
-                <Card
-                  onClick={() => setExpandedCard(expandedCard === 'cvs' ? null : 'cvs')}
-                  className={`p-6 border-0 text-center cursor-pointer rounded-2xl bg-gradient-to-br from-orange-100/40 to-yellow-100/40 shadow-lg hover:scale-[1.04] transition-transform duration-300 ${expandedCard === 'cvs' ? 'ring-4 ring-amber-400/40' : ''}`}
-                >
-                  <p className="text-4xl font-extrabold text-foreground mb-1">{stats.cvs}</p>
-                  <p className="text-base text-muted-foreground">CVs Uploaded</p>
-                  {expandedCard === 'cvs' && (
-                    <div className="mt-4 text-left">
-                      {latestCV ? (
-                        <>
-                          <div className="text-base font-medium">{latestCV.file_name}</div>
-                          <div className="text-sm text-muted-foreground">Scored: {latestCV.ai_score ?? latestCV.ai_analysis?.score ?? '—'}</div>
-                        </>
-                      ) : (
-                        <p className="text-base text-muted-foreground">No CV uploaded yet</p>
-                      )}
-                    </div>
-                  )}
-                </Card>
-
-                <Card
-                  onClick={() => setExpandedCard(expandedCard === 'matches' ? null : 'matches')}
-                  className={`p-6 border-0 text-center cursor-pointer rounded-2xl bg-gradient-to-br from-violet-100/40 to-blue-100/40 shadow-lg hover:scale-[1.04] transition-transform duration-300 ${expandedCard === 'matches' ? 'ring-4 ring-violet-400/40' : ''}`}
-                >
-                  <p className="text-4xl font-extrabold text-foreground mb-1">{stats.matches}</p>
-                  <p className="text-base text-muted-foreground">Job Matches (≥70%)</p>
-                  {expandedCard === 'matches' && (
-                    <div className="mt-4 text-base text-muted-foreground">
-                      <p>Matches are calculated from recent CV analyses. Visit <Link to="/matched-jobs" className="text-primary underline">Matched Jobs</Link> to view details.</p>
-                    </div>
-                  )}
-                </Card>
-              </div>
-
-              {/* Next Steps */}
-              <Card className="p-8 border-0 bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl glass-card">
-                <h3 className="text-xl font-bold mb-6 text-foreground">Recommended Next Steps</h3>
-                <div className="space-y-4">
-                  <Link to="/cv-review">
-                    <div className="flex items-center gap-5 p-5 rounded-2xl border-0 bg-gradient-to-r from-primary/10 to-accent/10 hover:shadow-lg transition-all cursor-pointer">
-                      <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shadow">
-                        1
-                      </div>
+              {/* Quick Actions */}
+              <Card className="p-8">
+                <h3 className="text-xl font-bold mb-6">Quick Actions</h3>
+                <div className="grid gap-4">
+                  <Link to="/cv-review" className="group">
+                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-primary transition-all">
+                      <FileText className="w-5 h-5 text-primary" />
                       <div className="flex-1">
-                        <p className="font-semibold text-base">Upload your CV</p>
-                        <p className="text-sm text-muted-foreground">Get instant AI-powered feedback</p>
+                        <p className="font-medium">CV Review</p>
+                        <p className="text-sm text-muted-foreground">Get AI feedback</p>
                       </div>
+                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </Link>
 
-                  <Link to="/ai-interview">
-                    <div className="flex items-center gap-5 p-5 rounded-2xl border-0 bg-gradient-to-r from-blue-100/40 to-violet-100/40 hover:shadow-lg transition-all cursor-pointer">
-                      <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-lg font-bold shadow">
-                        2
-                      </div>
+                  <Link to="/ai-interview" className="group">
+                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-primary transition-all">
+                      <Video className="w-5 h-5 text-primary" />
                       <div className="flex-1">
-                        <p className="font-semibold text-base">Practice your interview skills</p>
-                        <p className="text-sm text-muted-foreground">Build confidence with AI feedback</p>
+                        <p className="font-medium">AI Interview</p>
+                        <p className="text-sm text-muted-foreground">Practice with AI</p>
                       </div>
+                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </Link>
 
-                  <Link to="/job-matcher">
-                    <div className="flex items-center gap-5 p-5 rounded-2xl border-0 bg-gradient-to-r from-orange-100/40 to-yellow-100/40 hover:shadow-lg transition-all cursor-pointer">
-                      <div className="w-10 h-10 rounded-full bg-yellow-400 text-yellow-900 flex items-center justify-center text-lg font-bold shadow">
-                        3
-                      </div>
+                  <Link to="/job-matcher" className="group">
+                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-primary transition-all">
+                      <Target className="w-5 h-5 text-primary" />
                       <div className="flex-1">
-                        <p className="font-semibold text-base">Find matching opportunities</p>
-                        <p className="text-sm text-muted-foreground">AI-powered job recommendations</p>
+                        <p className="font-medium">Job Matcher</p>
+                        <p className="text-sm text-muted-foreground">Find opportunities</p>
                       </div>
+                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </Link>
                 </div>
@@ -378,63 +421,45 @@ const SeekerDashboard = () => {
 
             {/* Sidebar */}
             <div className="space-y-8">
-              <Card className="p-6 border-0 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl shadow-lg glass-card">
-                <div className="flex items-center gap-4 mb-4">
-                  <Target className="w-6 h-6 text-primary drop-shadow" />
-                  <h3 className="font-semibold text-lg">Quick Tips</h3>
-                </div>
-                <p className="text-base text-muted-foreground mb-4">
-                  Regular interview practice can increase your success rate by up to 3x.
-                </p>
-                <Link to="/ai-interview">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full rounded-full border-primary/60 hover:bg-primary/10 transition-all"
-                  >
-                    Start Practicing
-                  </Button>
-                </Link>
-              </Card>
-
-              <Card className="p-6 border-0 bg-gradient-to-br from-violet-100/40 to-blue-100/40 rounded-2xl shadow-lg glass-card">
-                <div className="flex items-center gap-4 mb-4">
-                  <TrendingUp className="w-6 h-6 text-violet-500 drop-shadow" />
-                  <h3 className="font-semibold text-lg">Recent Activity</h3>
-                </div>
+              <Card className="p-6">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Recent Activity
+                </h3>
                 {recentActivity.length === 0 ? (
-                  <p className="text-base text-muted-foreground">
-                    No recent activity yet. Start by uploading your CV to get personalized insights.
-                  </p>
+                  <div className="text-center py-8">
+                    <TrendingUp className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      No recent activity yet.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
-                    {recentActivity.map((item, idx) => (
-                      <div key={item.id + idx} className="flex items-start justify-between">
-                        <div>
-                          <div className="text-base font-medium">
-                            {item.type === 'cv' ? 'CV Uploaded' : 'Application'} - {item.title}
+                  <div className="space-y-3">
+                    {recentActivity.slice(0, 5).map((item, idx) => (
+                      <div key={item.id + idx} className="pb-3 border-b last:border-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {item.type === 'cv' ? 'CV Uploaded' : 'Applied'} - {item.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(item.date).toLocaleDateString()}
+                            </p>
                           </div>
-                          <div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleString()}</div>
-                        </div>
-                        <div className="text-right">
                           {item.score != null && (
-                            <div className="text-base font-semibold text-primary">{item.score}%</div>
+                            <span className="text-sm font-semibold text-primary shrink-0">
+                              {item.score}%
+                            </span>
                           )}
                         </div>
                       </div>
                     ))}
-
-                    <div className="pt-2">
-                      <Link to="/matched-jobs">
-                        <Button variant="ghost" size="sm" className="rounded-full hover:bg-primary/10 transition-all">View all activity</Button>
-                      </Link>
-                    </div>
                   </div>
                 )}
               </Card>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </ProtectedRoute>
   );
