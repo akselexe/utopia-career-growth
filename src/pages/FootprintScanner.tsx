@@ -32,17 +32,17 @@ const FootprintScanner = () => {
 
   useEffect(() => {
     if (user) {
-      loadProfile();
+      loadProfileAndScan();
     }
   }, [user]);
 
-  const loadProfile = async () => {
+  const loadProfileAndScan = async () => {
     if (!user) return;
     setLoading(true);
     try {
       const { data: seekerProfile } = await supabase
         .from('seeker_profiles')
-        .select('github_url')
+        .select('github_url, twitter_url')
         .eq('user_id', user.id)
         .single();
 
@@ -53,18 +53,37 @@ const FootprintScanner = () => {
           setGithubUsername(match[1]);
         }
       }
+
+      // Extract StackOverflow ID from twitter_url (repurpose for SO ID)
+      // Or you could add a dedicated stackoverflow_url field
+      if (seekerProfile?.twitter_url && seekerProfile.twitter_url.includes('stackoverflow')) {
+        const match = seekerProfile.twitter_url.match(/stackoverflow\.com\/users\/(\d+)/);
+        if (match) {
+          setStackoverflowId(match[1]);
+        }
+      }
+
+      setLoading(false);
+
+      // Auto-scan if we have at least one platform
+      if (seekerProfile?.github_url || (seekerProfile?.twitter_url && seekerProfile.twitter_url.includes('stackoverflow'))) {
+        await handleScan(seekerProfile.github_url ? seekerProfile.github_url.match(/github\.com\/([^\/]+)/)?.[1] : '', 
+                         seekerProfile?.twitter_url?.includes('stackoverflow') ? seekerProfile.twitter_url.match(/stackoverflow\.com\/users\/(\d+)/)?.[1] : '');
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleScan = async () => {
-    if (!githubUsername && !stackoverflowId) {
+  const handleScan = async (ghUsername?: string, soId?: string) => {
+    const usernameToUse = ghUsername || githubUsername;
+    const idToUse = soId || stackoverflowId;
+
+    if (!usernameToUse && !idToUse) {
       toast({
-        title: "Error",
-        description: "Please provide at least one platform username/ID.",
+        title: "No Platform Data",
+        description: "Please add your GitHub or StackOverflow URL in profile settings.",
         variant: "destructive",
       });
       return;
@@ -78,9 +97,9 @@ const FootprintScanner = () => {
     try {
       // Fetch GitHub data
       let ghData = null;
-      if (githubUsername) {
+      if (usernameToUse) {
         const { data: githubResult, error: githubError } = await supabase.functions.invoke('fetch-github-profile', {
-          body: { username: githubUsername }
+          body: { username: usernameToUse }
         });
 
         if (githubError) {
@@ -98,9 +117,9 @@ const FootprintScanner = () => {
 
       // Fetch StackOverflow data
       let soData = null;
-      if (stackoverflowId) {
+      if (idToUse) {
         const { data: soResult, error: soError } = await supabase.functions.invoke('fetch-stackoverflow-profile', {
-          body: { userId: stackoverflowId }
+          body: { userId: idToUse }
         });
 
         if (soError) {
@@ -187,64 +206,22 @@ const FootprintScanner = () => {
             <p className="text-muted-foreground text-lg">Analyze your public contributions across platforms</p>
           </div>
 
-          {/* Input Form */}
-          <Card className="p-6 mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Search className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Platform Credentials</h2>
-            </div>
-            
-            <div className="space-y-4 mb-6">
+          {/* Info Card */}
+          <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
+            <div className="flex items-start gap-3">
+              <Search className="w-5 h-5 text-primary mt-1" />
               <div>
-                <Label htmlFor="github" className="flex items-center gap-2">
-                  <Github className="w-4 h-4" />
-                  GitHub Username
-                </Label>
-                <Input
-                  id="github"
-                  value={githubUsername}
-                  onChange={(e) => setGithubUsername(e.target.value)}
-                  placeholder="octocat"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your GitHub username (not the full URL)
+                <h2 className="text-lg font-semibold mb-2">Automatic Scanning</h2>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Your footprint is automatically scanned from your profile. Update your GitHub URL or StackOverflow URL in profile settings to scan different accounts.
                 </p>
-              </div>
-
-              <div>
-                <Label htmlFor="stackoverflow" className="flex items-center gap-2">
-                  <Code className="w-4 h-4" />
-                  StackOverflow User ID
-                </Label>
-                <Input
-                  id="stackoverflow"
-                  value={stackoverflowId}
-                  onChange={(e) => setStackoverflowId(e.target.value)}
-                  placeholder="123456"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Find your ID in your StackOverflow profile URL
-                </p>
+                <Link to="/profile-settings">
+                  <Button variant="outline" size="sm">
+                    Update Profile URLs
+                  </Button>
+                </Link>
               </div>
             </div>
-
-            <Button 
-              onClick={handleScan} 
-              disabled={scanning || (!githubUsername && !stackoverflowId)}
-              className="w-full"
-            >
-              {scanning ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Scanning...
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Scan Footprint
-                </>
-              )}
-            </Button>
           </Card>
 
           {/* Results */}
@@ -357,9 +334,12 @@ const FootprintScanner = () => {
           {!githubData && !stackoverflowData && !scanning && (
             <Card className="p-12 text-center">
               <Search className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Enter your platform credentials above and click "Scan Footprint" to analyze your public contributions.
+              <p className="text-muted-foreground mb-4">
+                No platform data found in your profile. Add your GitHub or StackOverflow URLs in profile settings to see your footprint analysis.
               </p>
+              <Link to="/profile-settings">
+                <Button>Update Profile</Button>
+              </Link>
             </Card>
           )}
         </main>
