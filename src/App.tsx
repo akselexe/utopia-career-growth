@@ -13,6 +13,7 @@ import MatchedJobs from "./pages/MatchedJobs";
 import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
 import JobMatcher from "./pages/JobMatcher";
+import ProfileSettings from "./pages/ProfileSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/cv-review" element={<CVReview />} />
             <Route path="/ai-interview" element={<AIInterviewPage />} />
             <Route path="/job-matcher" element={<JobMatcher />} />
+            <Route path="/profile-settings" element={<ProfileSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

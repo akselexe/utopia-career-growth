@@ -297,10 +297,13 @@ export type Database = {
           desired_salary_max: number | null
           desired_salary_min: number | null
           experience_years: number | null
+          github_url: string | null
           id: string
           linkedin_url: string | null
           location: string | null
+          portfolio_url: string | null
           skills: string[] | null
+          twitter_url: string | null
           updated_at: string | null
           user_id: string
         }
@@ -310,10 +313,13 @@ export type Database = {
           desired_salary_max?: number | null
           desired_salary_min?: number | null
           experience_years?: number | null
+          github_url?: string | null
           id?: string
           linkedin_url?: string | null
           location?: string | null
+          portfolio_url?: string | null
           skills?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -323,10 +329,13 @@ export type Database = {
           desired_salary_max?: number | null
           desired_salary_min?: number | null
           experience_years?: number | null
+          github_url?: string | null
           id?: string
           linkedin_url?: string | null
           location?: string | null
+          portfolio_url?: string | null
           skills?: string[] | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_id?: string
         }

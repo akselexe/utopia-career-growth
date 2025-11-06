@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight, BarChart3, Lightbulb } from "lucide-react";
+import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight, BarChart3, Lightbulb, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -194,15 +194,23 @@ const SeekerDashboard = () => {
                   </Link>
                 </nav>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={signOut}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link to="/profile-settings">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline">Profile</span>
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={signOut}
+                  className="gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </Button>
+              </div>
             </div>
           </div>
         </header>
