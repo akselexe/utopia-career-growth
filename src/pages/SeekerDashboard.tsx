@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight, BarChart3, Lightbulb, Settings } from "lucide-react";
+import { FileText, Video, Target, LogOut, Loader2, Sparkles, TrendingUp, ArrowRight, BarChart3, Lightbulb, Settings, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -191,6 +191,9 @@ const SeekerDashboard = () => {
                   </Link>
                   <Link to="/job-matcher" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                     Job Matcher
+                  </Link>
+                  <Link to="/footprint-scanner" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    Footprint Scanner
                   </Link>
                 </nav>
               </div>
@@ -419,6 +422,17 @@ const SeekerDashboard = () => {
                       <div className="flex-1">
                         <p className="font-medium">Job Matcher</p>
                         <p className="text-sm text-muted-foreground">Find opportunities</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </Link>
+
+                  <Link to="/footprint-scanner" className="group">
+                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-primary transition-all">
+                      <Search className="w-5 h-5 text-primary" />
+                      <div className="flex-1">
+                        <p className="font-medium">Footprint Scanner</p>
+                        <p className="text-sm text-muted-foreground">Analyze contributions</p>
                       </div>
                       <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
