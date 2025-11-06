@@ -10,6 +10,9 @@ import Jobs from "./pages/Jobs";
 import SeekerDashboard from "./pages/SeekerDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import MatchedJobs from "./pages/MatchedJobs";
+import CVReview from "./pages/CVReview";
+import AIInterviewPage from "./pages/AIInterviewPage";
+import JobMatcher from "./pages/JobMatcher";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
             <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
             <Route path="/dashboard/company" element={<CompanyDashboard />} />
             <Route path="/matched-jobs" element={<MatchedJobs />} />
+            <Route path="/cv-review" element={<CVReview />} />
+            <Route path="/ai-interview" element={<AIInterviewPage />} />
+            <Route path="/job-matcher" element={<JobMatcher />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
