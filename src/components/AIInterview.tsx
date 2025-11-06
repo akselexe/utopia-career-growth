@@ -909,7 +909,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
           <div className="flex flex-col items-center gap-4">
             <div className="text-center space-y-2">
               <p className="text-sm font-medium">
-                {isRecording ? "🎤 Recording... Click to stop and send" : isLoading ? "🤖 AI is responding..." : "Click microphone to start speaking"}
+                {isRecording ? "Recording... Click to stop and send" : isLoading ? " AI is responding..." : "Click microphone to start speaking"}
               </p>
             </div>
             <div className="flex gap-3">
