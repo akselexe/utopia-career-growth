@@ -11,16 +11,8 @@ interface Star {
   moveDirection: number;
 }
 
-interface ShootingStar {
-  id: number;
-  startX: number;
-  startY: number;
-  animationDelay: number;
-}
-
 export const AnimatedBackground = () => {
   const [stars, setStars] = useState<Star[]>([]);
-  const [shootingStars, setShootingStars] = useState<ShootingStar[]>([]);
 
   useEffect(() => {
     // Generate 150 stars with random positions and properties
@@ -35,15 +27,6 @@ export const AnimatedBackground = () => {
       moveDirection: Math.random() * 360, // Random direction in degrees
     }));
     setStars(generatedStars);
-
-    // Generate 5 shooting stars with staggered delays
-    const generatedShootingStars = Array.from({ length: 5 }, (_, i) => ({
-      id: i,
-      startX: Math.random() * 100,
-      startY: Math.random() * 50, // Start from top half
-      animationDelay: i * 4, // Stagger by 4 seconds
-    }));
-    setShootingStars(generatedShootingStars);
   }, []);
 
   return (
@@ -63,20 +46,6 @@ export const AnimatedBackground = () => {
             '--move-x': `${Math.cos(star.moveDirection * Math.PI / 180) * star.moveDistance}px`,
             '--move-y': `${Math.sin(star.moveDirection * Math.PI / 180) * star.moveDistance}px`,
           } as React.CSSProperties}
-        />
-      ))}
-      
-      {/* Shooting Stars */}
-      {shootingStars.map((shootingStar) => (
-        <div
-          key={`shooting-${shootingStar.id}`}
-          className="absolute w-1 h-1 bg-white rounded-full animate-shooting-star"
-          style={{
-            left: `${shootingStar.startX}%`,
-            top: `${shootingStar.startY}%`,
-            animationDelay: `${shootingStar.animationDelay}s`,
-            boxShadow: '0 0 4px 2px rgba(255, 255, 255, 0.8)',
-          }}
         />
       ))}
     </div>
