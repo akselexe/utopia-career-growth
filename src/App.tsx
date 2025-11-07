@@ -28,23 +28,21 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Navbar />
-          <div className="pt-16">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
-              <Route path="/dashboard/company" element={<CompanyDashboard />} />
-              <Route path="/matched-jobs" element={<MatchedJobs />} />
-              <Route path="/cv-review" element={<CVReview />} />
-              <Route path="/ai-interview" element={<AIInterviewPage />} />
-              <Route path="/job-matcher" element={<JobMatcher />} />
-              <Route path="/profile-settings" element={<ProfileSettings />} />
-              <Route path="/footprint-scanner" element={<FootprintScanner />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
+            <Route path="/dashboard/company" element={<CompanyDashboard />} />
+            <Route path="/matched-jobs" element={<MatchedJobs />} />
+            <Route path="/cv-review" element={<CVReview />} />
+            <Route path="/ai-interview" element={<AIInterviewPage />} />
+            <Route path="/job-matcher" element={<JobMatcher />} />
+            <Route path="/profile-settings" element={<ProfileSettings />} />
+            <Route path="/footprint-scanner" element={<FootprintScanner />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
