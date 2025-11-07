@@ -84,143 +84,136 @@ function Particles({ count = 100 }: { count?: number }) {
   );
 }
 
-// Islamic Star Pattern (8-pointed star)
-function IslamicStar({ position }: { position: [number, number, number] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  const starShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const points = 8;
-    const outerRadius = 0.8;
-    const innerRadius = 0.4;
-    
-    for (let i = 0; i < points * 2; i++) {
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const angle = (i * Math.PI) / points;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      
-      if (i === 0) {
-        shape.moveTo(x, y);
-      } else {
-        shape.lineTo(x, y);
-      }
-    }
-    shape.closePath();
-    
-    return new THREE.ShapeGeometry(shape);
-  }, []);
+// Moroccan Zellige Tile Pattern
+function ZelligeTile({ position }: { position: [number, number, number] }) {
+  const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.z = state.clock.getElapsedTime() * 0.2;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.5;
+    if (groupRef.current) {
+      groupRef.current.rotation.z = state.clock.getElapsedTime() * 0.15;
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.5;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} geometry={starShape}>
-      <meshStandardMaterial color="#2ba5a5" transparent opacity={0.3} side={THREE.DoubleSide} />
-    </mesh>
+    <group ref={groupRef} position={position}>
+      {/* Central star */}
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+        const angle = (i * Math.PI) / 4;
+        return (
+          <mesh key={i} position={[Math.cos(angle) * 0.4, Math.sin(angle) * 0.4, 0]}>
+            <boxGeometry args={[0.15, 0.6, 0.05]} />
+            <meshStandardMaterial color="#2ba5a5" transparent opacity={0.4} />
+          </mesh>
+        );
+      })}
+      {/* Outer frame */}
+      <mesh>
+        <torusGeometry args={[0.7, 0.08, 8, 8]} />
+        <meshStandardMaterial color="#2ba5a5" transparent opacity={0.3} />
+      </mesh>
+    </group>
   );
 }
 
-// Adinkra Symbol - Gye Nyame (Supremacy of God)
-function AdinkraSymbol({ position }: { position: [number, number, number] }) {
+// Kente Cloth Pattern
+function KentePattern({ position }: { position: [number, number, number] }) {
   const meshRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.25;
       meshRef.current.position.y = position[1] + Math.cos(state.clock.getElapsedTime() * 0.6) * 0.4;
     }
   });
 
   return (
     <group ref={meshRef} position={position}>
-      {/* Central circle */}
-      <mesh>
-        <torusGeometry args={[0.5, 0.1, 16, 32]} />
-        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
-      </mesh>
-      {/* Cross pattern */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.15, 1.2, 0.15]} />
-        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[1.2, 0.15, 0.15]} />
-        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
-      </mesh>
+      {/* Vertical strips */}
+      {[-0.4, -0.2, 0, 0.2, 0.4].map((x, i) => (
+        <mesh key={`v${i}`} position={[x, 0, 0]}>
+          <boxGeometry args={[0.12, 1.2, 0.05]} />
+          <meshStandardMaterial color={i % 2 === 0 ? "#ed6c2e" : "#2ba5a5"} transparent opacity={0.5} />
+        </mesh>
+      ))}
+      {/* Horizontal strips */}
+      {[-0.4, -0.2, 0, 0.2, 0.4].map((y, i) => (
+        <mesh key={`h${i}`} position={[0, y, 0.02]}>
+          <boxGeometry args={[1.2, 0.12, 0.05]} />
+          <meshStandardMaterial color={i % 2 === 0 ? "#2ba5a5" : "#ed6c2e"} transparent opacity={0.5} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
-// Geometric Hexagon (Berber/Islamic pattern)
-function GeometricHexagon({ position }: { position: [number, number, number] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  const hexShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const sides = 6;
-    const radius = 0.6;
-    
-    for (let i = 0; i < sides; i++) {
-      const angle = (i * 2 * Math.PI) / sides;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      
-      if (i === 0) {
-        shape.moveTo(x, y);
-      } else {
-        shape.lineTo(x, y);
-      }
-    }
-    shape.closePath();
-    
-    return new THREE.ShapeGeometry(shape);
-  }, []);
+// Arabesque Pattern (Flowing Islamic Design)
+function ArabesquePattern({ position }: { position: [number, number, number] }) {
+  const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.z = -state.clock.getElapsedTime() * 0.15;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.7 + position[0]) * 0.6;
+    if (groupRef.current) {
+      groupRef.current.rotation.z = -state.clock.getElapsedTime() * 0.2;
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.7 + position[0]) * 0.6;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} geometry={hexShape}>
-      <meshStandardMaterial color="#2ba5a5" transparent opacity={0.25} side={THREE.DoubleSide} />
-    </mesh>
+    <group ref={groupRef} position={position}>
+      {/* Central flower */}
+      {[0, 1, 2, 3, 4, 5].map((i) => {
+        const angle = (i * Math.PI) / 3;
+        return (
+          <mesh key={i} position={[Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#2ba5a5" transparent opacity={0.4} />
+          </mesh>
+        );
+      })}
+      {/* Connecting curves */}
+      {[0, 1, 2].map((i) => {
+        const angle = (i * Math.PI * 2) / 3;
+        return (
+          <mesh key={`c${i}`} position={[Math.cos(angle) * 0.5, Math.sin(angle) * 0.5, 0]} rotation={[0, 0, angle]}>
+            <torusGeometry args={[0.2, 0.05, 8, 16, Math.PI]} />
+            <meshStandardMaterial color="#2ba5a5" transparent opacity={0.35} />
+          </mesh>
+        );
+      })}
+    </group>
   );
 }
 
-// Diamond Pattern (Common in both African and MENA art)
-function DiamondPattern({ position }: { position: [number, number, number] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  const diamondShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(0, 0.8);
-    shape.lineTo(0.6, 0);
-    shape.lineTo(0, -0.8);
-    shape.lineTo(-0.6, 0);
-    shape.closePath();
-    
-    return new THREE.ShapeGeometry(shape);
-  }, []);
+// Mudcloth Pattern (Mali Bogolan)
+function MudclothPattern({ position }: { position: [number, number, number] }) {
+  const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.z = state.clock.getElapsedTime() * 0.25;
-      meshRef.current.position.y = position[1] + Math.cos(state.clock.getElapsedTime() * 0.8 + position[2]) * 0.5;
+    if (groupRef.current) {
+      groupRef.current.rotation.z = state.clock.getElapsedTime() * 0.18;
+      groupRef.current.position.y = position[1] + Math.cos(state.clock.getElapsedTime() * 0.8 + position[2]) * 0.5;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} geometry={diamondShape}>
-      <meshStandardMaterial color="#ed6c2e" transparent opacity={0.3} side={THREE.DoubleSide} />
-    </mesh>
+    <group ref={groupRef} position={position}>
+      {/* Zigzag pattern */}
+      {[-0.3, 0, 0.3].map((y, i) => (
+        <mesh key={`z${i}`} position={[0, y, 0]}>
+          <boxGeometry args={[1.0, 0.08, 0.05]} />
+          <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
+        </mesh>
+      ))}
+      {/* Dots pattern */}
+      {[-0.4, -0.2, 0.2, 0.4].map((y) =>
+        [-0.4, -0.2, 0, 0.2, 0.4].map((x, i) => (
+          <mesh key={`d${y}${i}`} position={[x, y, 0.02]}>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshStandardMaterial color="#ed6c2e" transparent opacity={0.5} />
+          </mesh>
+        ))
+      )}
+    </group>
   );
 }
 
@@ -242,25 +235,25 @@ function Scene() {
       {/* Subtle Particles */}
       <Particles count={80} />
       
-      {/* Cultural Geometric Shapes */}
-      {/* Islamic Stars */}
-      <IslamicStar position={[-8, 3, -5]} />
-      <IslamicStar position={[10, 5, -8]} />
-      <IslamicStar position={[-6, 7, 5]} />
+      {/* Traditional Cultural Patterns */}
+      {/* Moroccan Zellige Tiles */}
+      <ZelligeTile position={[-8, 3, -5]} />
+      <ZelligeTile position={[10, 5, -8]} />
+      <ZelligeTile position={[-6, 7, 5]} />
       
-      {/* Adinkra Symbols */}
-      <AdinkraSymbol position={[8, 4, -3]} />
-      <AdinkraSymbol position={[-10, 6, 3]} />
+      {/* Kente Cloth Patterns */}
+      <KentePattern position={[8, 4, -3]} />
+      <KentePattern position={[-10, 6, 3]} />
       
-      {/* Geometric Hexagons */}
-      <GeometricHexagon position={[5, 5, -7]} />
-      <GeometricHexagon position={[-7, 4, 2]} />
-      <GeometricHexagon position={[12, 6, -2]} />
+      {/* Arabesque Patterns */}
+      <ArabesquePattern position={[5, 5, -7]} />
+      <ArabesquePattern position={[-7, 4, 2]} />
+      <ArabesquePattern position={[12, 6, -2]} />
       
-      {/* Diamond Patterns */}
-      <DiamondPattern position={[-5, 8, -4]} />
-      <DiamondPattern position={[7, 3, 4]} />
-      <DiamondPattern position={[-9, 5, -6]} />
+      {/* Mudcloth Patterns */}
+      <MudclothPattern position={[-5, 8, -4]} />
+      <MudclothPattern position={[7, 3, 4]} />
+      <MudclothPattern position={[-9, 5, -6]} />
     </>
   );
 }
