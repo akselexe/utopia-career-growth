@@ -179,7 +179,7 @@ const Auth = () => {
                   id="signin-email"
                   name="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder=""
                   required
                   onChange={(e) => validateField("email", e.target.value)}
                 />
@@ -217,7 +217,7 @@ const Auth = () => {
                   id="signup-name"
                   name="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder=""
                   required
                   onChange={(e) => validateField("name", e.target.value)}
                 />
@@ -229,7 +229,7 @@ const Auth = () => {
                   id="signup-email"
                   name="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder=""
                   required
                   onChange={(e) => validateField("email", e.target.value)}
                 />
