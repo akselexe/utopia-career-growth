@@ -253,6 +253,36 @@ All colors MUST be HSL.
   animation: star-move 8s ease-in-out infinite;
 }
 
+@keyframes shooting-star {
+  0% {
+    transform: translate(0, 0) rotate(-45deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(300px, 300px) rotate(-45deg);
+    opacity: 0;
+  }
+}
+
+.animate-shooting-star {
+  animation: shooting-star 1.5s ease-out infinite;
+  animation-delay: inherit;
+}
+
+.animate-shooting-star::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 100%);
+  transform: translateX(-100%);
+}
+
   /* Removed overly flashy pulse-glow animation */
 
   /* Hover Lift */
