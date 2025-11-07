@@ -230,19 +230,27 @@ All colors MUST be HSL.
   }
 }
 
-@keyframes twinkle {
+@keyframes star-move {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    opacity: 0.5;
+    transform: translate(calc(var(--move-x) * 0.5), calc(var(--move-y) * 0.5)) scale(0.8);
   }
   50% {
     opacity: 0.3;
-    transform: scale(0.8);
+    transform: translate(var(--move-x), var(--move-y)) scale(0.6);
+  }
+  75% {
+    opacity: 0.5;
+    transform: translate(calc(var(--move-x) * 0.5), calc(var(--move-y) * 0.5)) scale(0.8);
   }
 }
 
-.animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
+.animate-star-move {
+  animation: star-move 8s ease-in-out infinite;
 }
 
   /* Removed overly flashy pulse-glow animation */

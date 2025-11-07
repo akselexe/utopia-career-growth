@@ -7,6 +7,8 @@ interface Star {
   size: number;
   animationDelay: number;
   animationDuration: number;
+  moveDistance: number;
+  moveDirection: number;
 }
 
 export const AnimatedBackground = () => {
@@ -21,6 +23,8 @@ export const AnimatedBackground = () => {
       size: Math.random() * 2 + 1, // 1-3px
       animationDelay: Math.random() * 3,
       animationDuration: Math.random() * 3 + 2, // 2-5s
+      moveDistance: Math.random() * 50 + 20, // 20-70px movement
+      moveDirection: Math.random() * 360, // Random direction in degrees
     }));
     setStars(generatedStars);
   }, []);
@@ -31,7 +35,7 @@ export const AnimatedBackground = () => {
       {stars.map((star) => (
         <div
           key={star.id}
-          className="absolute rounded-full bg-white animate-twinkle"
+          className="absolute rounded-full bg-white animate-star-move"
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
@@ -39,7 +43,9 @@ export const AnimatedBackground = () => {
             height: `${star.size}px`,
             animationDelay: `${star.animationDelay}s`,
             animationDuration: `${star.animationDuration}s`,
-          }}
+            '--move-x': `${Math.cos(star.moveDirection * Math.PI / 180) * star.moveDistance}px`,
+            '--move-y': `${Math.sin(star.moveDirection * Math.PI / 180) * star.moveDistance}px`,
+          } as React.CSSProperties}
         />
       ))}
     </div>
