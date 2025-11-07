@@ -8,6 +8,7 @@ import { Upload, Loader2, FileText, CheckCircle2, XCircle, Sparkles, Download, C
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from 'pdfjs-dist';
+import jsPDF from 'jspdf';
 // @ts-ignore - Vite handles this worker import
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -292,19 +293,82 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   };
 
   const downloadResume = () => {
-    const blob = new Blob([rewrittenResume], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rewritten_resume_${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    
+    // Parse markdown and convert to plain text with basic formatting
+    const lines = rewrittenResume.split('\n');
+    let yPosition = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    
+    doc.setFont("helvetica");
+    
+    lines.forEach((line) => {
+      // Check if we need a new page
+      if (yPosition > pageHeight - 20) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Handle different markdown elements
+      if (line.startsWith('# ')) {
+        // Main heading
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        const text = line.replace('# ', '');
+        doc.text(text, margin, yPosition);
+        yPosition += 12;
+      } else if (line.startsWith('## ')) {
+        // Section heading
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        const text = line.replace('## ', '');
+        doc.text(text, margin, yPosition);
+        yPosition += 10;
+      } else if (line.startsWith('### ')) {
+        // Subsection heading
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        const text = line.replace('### ', '');
+        doc.text(text, margin, yPosition);
+        yPosition += 8;
+      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        // Bullet points
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const text = '• ' + line.replace(/^[-*]\s/, '');
+        const splitText = doc.splitTextToSize(text, maxWidth - 10);
+        doc.text(splitText, margin + 5, yPosition);
+        yPosition += splitText.length * 5 + 2;
+      } else if (line.startsWith('**') && line.endsWith('**')) {
+        // Bold text
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const text = line.replace(/\*\*/g, '');
+        const splitText = doc.splitTextToSize(text, maxWidth);
+        doc.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 5 + 2;
+      } else if (line.trim() === '') {
+        // Empty line - add spacing
+        yPosition += 4;
+      } else {
+        // Regular text
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const splitText = doc.splitTextToSize(line, maxWidth);
+        doc.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 5 + 2;
+      }
+    });
+    
+    // Save the PDF
+    doc.save(`resume_${Date.now()}.pdf`);
     
     toast({
       title: "Downloaded!",
-      description: "Resume downloaded successfully",
+      description: "Resume PDF downloaded successfully",
     });
   };
 
@@ -529,7 +593,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
               </Button>
               <Button variant="outline" size="sm" onClick={downloadResume}>
                 <Download className="w-4 h-4 mr-2" />
-                Download
+                Download PDF
               </Button>
             </div>
           </div>
