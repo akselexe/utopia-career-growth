@@ -51,7 +51,7 @@ const JobMatcher = () => {
       // Fetch jobs - prioritize by location if available
       let query = supabase
         .from('jobs')
-        .select('*, company_profiles!jobs_company_id_fkey(company_name)')
+        .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(20);
@@ -185,7 +185,7 @@ const JobMatcher = () => {
                         <div className="flex-1">
                           <h3 className="text-xl font-semibold mb-1">{job.title}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {job.company_profiles?.company_name || 'Company'}
+                            UtopiaHire
                           </p>
                         </div>
                         {job.location?.toLowerCase().includes(userLocation?.toLowerCase() || '') && (
