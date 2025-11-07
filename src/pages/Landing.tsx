@@ -42,9 +42,9 @@ const Landing = () => {
             </h1>
             
             {/* Subheading */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-white max-w-3xl mx-auto leading-relaxed">
               We're building a better job market for Africa and the Middle East. Get your resume reviewed, 
-              practice interviews, and find jobs that match your skills—all in one place.
+              practice interviews, and find jobs that match your skills all in one place.
             </p>
             
             {/* CTA Buttons */}
@@ -63,32 +63,6 @@ const Landing = () => {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Problem Statement Section */}
-      <section className="container mx-auto px-4 py-16 md:py-20">
-        <div className="max-w-4xl mx-auto">
-          <Card className="p-8 md:p-10 border-2">
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                    Breaking Employment Barriers
-                  </h2>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Many talented professionals in emerging regions face high rejection rates 
-                    due to outdated resumes, poor formatting, and algorithmic filtering. 
-                    UtopiaHire addresses these challenges with contextually-aware AI tools 
-                    that help candidates stand out and connect with the right opportunities.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
         </div>
       </section>
 
