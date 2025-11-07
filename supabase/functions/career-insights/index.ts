@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cvAnalysis, applications, profile } = await req.json();
+    const { cvAnalysis, applications, profile, footprintData } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -23,6 +23,24 @@ Analyze the candidate's profile, CV performance, and application history to prov
 Focus on: strengths, growth areas, market positioning, skill gaps, and strategic recommendations.
 Be specific, professional, and encouraging.`;
 
+    const footprintSection = footprintData ? `
+
+Developer Footprint Analysis:
+GitHub Profile:
+- Public Repositories: ${footprintData.githubData?.profile?.publicRepos || 'N/A'}
+- Followers: ${footprintData.githubData?.profile?.followers || 'N/A'}
+- Recent Commits: ${footprintData.githubData?.stats?.totalCommits || 'N/A'}
+- Primary Languages: ${footprintData.githubData?.stats?.languages?.join(', ') || 'N/A'}
+- Location: ${footprintData.githubData?.profile?.location || 'N/A'}
+
+Stack Overflow Profile:
+- Reputation: ${footprintData.stackoverflowData?.profile?.reputation?.toLocaleString() || 'N/A'}
+- Answers: ${footprintData.stackoverflowData?.stats?.answerCount || 'N/A'}
+- Questions: ${footprintData.stackoverflowData?.stats?.questionCount || 'N/A'}
+- Top Tags: ${footprintData.stackoverflowData?.topTags?.slice(0, 5).map((t: any) => `${t.name} (${t.count})`).join(', ') || 'N/A'}
+- Badges: Gold ${footprintData.stackoverflowData?.profile?.badges?.gold || 0}, Silver ${footprintData.stackoverflowData?.profile?.badges?.silver || 0}, Bronze ${footprintData.stackoverflowData?.profile?.badges?.bronze || 0}
+` : '';
+
     const userPrompt = `
 Profile Data:
 - CV Score: ${cvAnalysis?.score || 'N/A'}
@@ -30,13 +48,14 @@ Profile Data:
 - Improvement Areas: ${cvAnalysis?.improvements?.join(', ') || 'N/A'}
 - Total Applications: ${applications}
 - Profile Completeness: ${profile?.completeness || 'N/A'}%
-
+${footprintSection}
 Generate a comprehensive Career Insights Report with:
-1. Current Position Analysis (2-3 sentences)
-2. Key Strengths to Leverage (3-4 bullet points)
+1. Current Position Analysis (2-3 sentences) - ${footprintData ? 'Include insights from their public developer footprint' : ''}
+2. Key Strengths to Leverage (3-4 bullet points) - ${footprintData ? 'Reference their GitHub activity and Stack Overflow contributions' : ''}
 3. Priority Development Areas (3-4 bullet points)
-4. Strategic Next Steps (4-5 actionable recommendations)
-5. Market Positioning Advice (2-3 sentences)
+4. Strategic Next Steps (4-5 actionable recommendations) - ${footprintData ? 'Consider their technology stack and community engagement' : ''}
+5. Market Positioning Advice (2-3 sentences) - ${footprintData ? 'Use their technical footprint to position them in the market' : ''}
+${footprintData ? '6. Developer Footprint Summary (2-3 sentences highlighting their public contributions and community presence)' : ''}
 
 Format the response in markdown with clear sections.`;
 

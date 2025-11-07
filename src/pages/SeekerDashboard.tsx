@@ -41,11 +41,53 @@ const SeekerDashboard = () => {
     if (!user) return;
     setLoadingInsights(true);
     try {
+      // Fetch seeker profile for GitHub/Stack Overflow URLs
+      const { data: seekerProfile } = await supabase
+        .from('seeker_profiles')
+        .select('github_url, twitter_url')
+        .eq('user_id', user.id)
+        .single();
+
+      let footprintData = null;
+
+      // If profile has GitHub or Stack Overflow URLs, fetch footprint data
+      if (seekerProfile?.github_url || (seekerProfile?.twitter_url && seekerProfile.twitter_url.includes('stackoverflow'))) {
+        const githubUsername = seekerProfile?.github_url?.match(/github\.com\/([^\/]+)/)?.[1];
+        const stackoverflowId = seekerProfile?.twitter_url?.includes('stackoverflow') 
+          ? seekerProfile.twitter_url.match(/stackoverflow\.com\/users\/(\d+)/)?.[1] 
+          : null;
+
+        let githubData = null;
+        let stackoverflowData = null;
+
+        // Fetch GitHub data
+        if (githubUsername) {
+          const { data: ghResult } = await supabase.functions.invoke('fetch-github-profile', {
+            body: { username: githubUsername }
+          });
+          if (ghResult) githubData = ghResult;
+        }
+
+        // Fetch Stack Overflow data
+        if (stackoverflowId) {
+          const { data: soResult } = await supabase.functions.invoke('fetch-stackoverflow-profile', {
+            body: { userId: stackoverflowId }
+          });
+          if (soResult) stackoverflowData = soResult;
+        }
+
+        if (githubData || stackoverflowData) {
+          footprintData = { githubData, stackoverflowData };
+        }
+      }
+
+      // Generate career insights with footprint data
       const { data, error } = await supabase.functions.invoke('career-insights', {
         body: {
           cvAnalysis: latestCV?.ai_analysis,
           applications: stats.applications,
-          profile: { completeness: latestCV?.ai_score || 45 }
+          profile: { completeness: latestCV?.ai_score || 45 },
+          footprintData
         }
       });
 
@@ -53,7 +95,9 @@ const SeekerDashboard = () => {
       setCareerInsights(data.insights);
       toast({
         title: "Career Insights Generated",
-        description: "Your personalized career report is ready.",
+        description: footprintData 
+          ? "Your personalized career report with developer footprint is ready."
+          : "Your personalized career report is ready.",
       });
     } catch (error) {
       console.error('Error generating career insights:', error);
