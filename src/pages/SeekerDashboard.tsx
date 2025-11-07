@@ -184,7 +184,7 @@ const SeekerDashboard = () => {
                 </Link>
                 <nav className="hidden md:flex items-center gap-6">
                   <Link to="/cv-review" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                    CV Review
+                    Resume Review
                   </Link>
                   <Link to="/ai-interview" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                     AI Interview
@@ -395,8 +395,8 @@ const SeekerDashboard = () => {
                     <div className="flex items-center gap-4 p-4 rounded-lg border hover:border-primary transition-all">
                       <FileText className="w-5 h-5 text-primary" />
                       <div className="flex-1">
-                        <p className="font-medium">CV Review</p>
-                        <p className="text-sm text-muted-foreground">Get AI feedback</p>
+                        <p className="font-medium">Resume Review & Rewrite</p>
+                        <p className="text-sm text-muted-foreground">AI analysis & rewriting</p>
                       </div>
                       <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>

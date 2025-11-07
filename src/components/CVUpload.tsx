@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Upload, Loader2, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Upload, Loader2, FileText, CheckCircle2, XCircle, Sparkles, Download, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from 'pdfjs-dist';
@@ -24,6 +25,10 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [cvText, setCvText] = useState<string>("");
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [rewrittenResume, setRewrittenResume] = useState<string>("");
+  const [targetRole, setTargetRole] = useState<string>("");
 
   // Set up PDF.js worker using Vite's URL import
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -89,6 +94,8 @@ export const CVUpload = ({ userId }: { userId: string }) => {
         // For TXT and other text files, read directly
         text = await file.text();
       }
+
+      setCvText(text); // Store the extracted text
 
       // Upload to storage
       const filePath = `${userId}/${Date.now()}_${file.name}`;
@@ -174,16 +181,93 @@ export const CVUpload = ({ userId }: { userId: string }) => {
     }
   };
 
+  const handleRewriteResume = async () => {
+    if (!cvText || !analysis) {
+      toast({
+        title: "Cannot Rewrite",
+        description: "Please upload and analyze a resume first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRewriting(true);
+    setRewrittenResume("");
+
+    try {
+      const { data: rewriteData, error: rewriteError } = await supabase.functions.invoke('rewrite-resume', {
+        body: { 
+          cvText: cvText.substring(0, 4000),
+          analysis: analysis,
+          targetRole: targetRole || undefined
+        },
+      });
+
+      if (rewriteError) {
+        console.error('Rewrite error:', rewriteError);
+        throw new Error(rewriteError.message || 'Failed to rewrite resume');
+      }
+
+      if (!rewriteData || !rewriteData.rewrittenResume) {
+        throw new Error('No rewritten resume received');
+      }
+
+      setRewrittenResume(rewriteData.rewrittenResume);
+      
+      toast({
+        title: "Resume Rewritten Successfully!",
+        description: "Your improved resume is ready. Review and download below.",
+      });
+
+    } catch (error) {
+      console.error('Resume rewrite error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to rewrite resume';
+      
+      toast({
+        title: "Rewrite Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(rewrittenResume);
+    toast({
+      title: "Copied!",
+      description: "Resume copied to clipboard",
+    });
+  };
+
+  const downloadResume = () => {
+    const blob = new Blob([rewrittenResume], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rewritten_resume_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Downloaded!",
+      description: "Resume downloaded successfully",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6 space-y-4">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <FileText className="w-6 h-6 text-primary" />
-            CV Review & Enhancement
+            Resume Review & Rewrite
           </h2>
           <p className="text-muted-foreground">
-            Upload your CV to get instant AI-powered analysis and improvement suggestions
+            Upload your resume to get AI-powered analysis and a professionally rewritten version
           </p>
         </div>
 
@@ -291,6 +375,94 @@ export const CVUpload = ({ userId }: { userId: string }) => {
               </h4>
               <p className="text-sm">{analysis.formatting_feedback}</p>
             </div>
+          </div>
+
+          {/* Rewrite Section */}
+          <div className="pt-6 border-t space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  AI Resume Rewriter
+                </h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Get a professionally rewritten version optimized for ATS and impact
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="target-role" className="text-sm">
+                  Target Role (Optional)
+                </Label>
+                <Input
+                  id="target-role"
+                  placeholder="e.g., Senior Software Engineer"
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  disabled={isRewriting}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tailor your resume for a specific position
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleRewriteResume}
+                disabled={isRewriting || !analysis}
+                className="w-full"
+              >
+                {isRewriting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Rewriting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Rewrite My Resume
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Rewritten Resume Display */}
+      {rewrittenResume && (
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Your Rewritten Resume
+            </h3>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={downloadResume}>
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 rounded-lg p-6 max-h-[600px] overflow-y-auto">
+            <Textarea
+              value={rewrittenResume}
+              onChange={(e) => setRewrittenResume(e.target.value)}
+              className="min-h-[500px] font-mono text-sm bg-transparent border-none focus-visible:ring-0"
+              placeholder="Your rewritten resume will appear here..."
+            />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-900">
+              <strong>Tip:</strong> Review the rewritten content carefully and make any personal adjustments before using it. You can edit the text directly above.
+            </p>
           </div>
         </Card>
       )}

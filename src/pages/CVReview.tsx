@@ -30,9 +30,9 @@ const CVReview = () => {
                   <div className="p-2 rounded-lg bg-primary/10">
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">CV Review</h1>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">Resume Reviewer & Rewriter</h1>
                 </div>
-                <p className="text-sm text-slate-600 mt-1">Get AI-powered insights to improve your CV</p>
+                <p className="text-sm text-slate-600 mt-1">AI-powered analysis and professional resume rewriting</p>
               </div>
             </div>
           </div>
@@ -45,7 +45,7 @@ const CVReview = () => {
             
             {/* Best Practices */}
             <Card className="p-8 bg-white border border-slate-200 shadow-lg rounded-xl">
-              <h3 className="text-xl font-bold text-slate-900 mb-6">CV Best Practices</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-6">Resume Best Practices</h3>
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <div className="p-2 rounded-lg bg-emerald-50">
