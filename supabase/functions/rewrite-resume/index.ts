@@ -39,7 +39,7 @@ serve(async (req) => {
 
     console.log('Rewriting resume for user:', user.id, 'with template style:', templateStyle ? 'custom' : 'default');
 
-    // Call Lovable AI to rewrite the resume
+    // Call Lovable AI to rewrite the resume in structured format
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -51,34 +51,64 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert resume writer and career coach. Your task is to rewrite and improve the user's resume based on the analysis provided.
+            content: `You are an expert resume writer. Rewrite the resume in a STRUCTURED JSON format that will be used to generate a professional PDF.
 
-IMPORTANT INSTRUCTIONS:
-1. Maintain all factual information (names, dates, companies, education)
-2. Improve clarity, impact, and professionalism
-3. Use strong action verbs and quantify achievements where possible
-4. Optimize for ATS (Applicant Tracking Systems)
-5. Address the weaknesses identified in the analysis
-6. Incorporate missing skills naturally where appropriate
-7. Improve formatting and structure
-${targetRole ? `8. Tailor the content for the role: ${targetRole}` : ''}
+IMPORTANT: Return ONLY valid JSON with this exact structure:
+{
+  "name": "Full Name",
+  "contact": {
+    "email": "email@example.com",
+    "phone": "+1234567890",
+    "location": "City, State",
+    "linkedin": "linkedin.com/in/username",
+    "website": "portfolio.com"
+  },
+  "summary": "2-3 sentence professional summary highlighting key achievements and career focus",
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "location": "City, State",
+      "dates": "Month Year - Present",
+      "achievements": [
+        "Achievement with metrics and impact",
+        "Another quantifiable achievement"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name",
+      "school": "University Name",
+      "location": "City, State",
+      "dates": "Year - Year",
+      "details": "GPA, honors, relevant coursework"
+    }
+  ],
+  "skills": {
+    "technical": ["Skill 1", "Skill 2"],
+    "tools": ["Tool 1", "Tool 2"],
+    "languages": ["Language 1", "Language 2"]
+  }
+}
 
-TEMPLATE STYLE:
-${templateStyle || 'Use a modern, professional format with clear sections and strong action verbs.'}
+GUIDELINES:
+- Use strong action verbs and quantify achievements
+- Keep bullet points concise (1-2 lines)
+- Maintain factual accuracy from original resume
+- Optimize for ATS systems
+${targetRole ? `- Tailor content for: ${targetRole}` : ''}
+${templateStyle || ''}
 
-Return the rewritten resume in a clear, professional format with proper sections:
-- Contact Information
-- Professional Summary
-- Work Experience
-- Education
-- Skills
-- Additional sections as appropriate
-
-Use markdown formatting for structure. Follow the template style guidance closely.`
+Analysis context:
+Score: ${analysis?.score || 'N/A'}
+Strengths: ${analysis?.strengths?.join(', ') || 'N/A'}
+Areas to improve: ${analysis?.improvements?.join(', ') || 'N/A'}
+Missing skills: ${analysis?.missing_skills?.join(', ') || 'N/A'}`
           },
           {
             role: 'user',
-            content: `Original Resume:\n${cvText}\n\nAnalysis:\nScore: ${analysis?.score || 'N/A'}\nStrengths: ${analysis?.strengths?.join(', ') || 'N/A'}\nImprovements Needed: ${analysis?.improvements?.join(', ') || 'N/A'}\nMissing Skills: ${analysis?.missing_skills?.join(', ') || 'N/A'}\n\nPlease rewrite this resume to address the identified weaknesses and make it more impactful.`
+            content: `Rewrite this resume:\n\n${cvText}`
           }
         ],
         temperature: 0.8,
@@ -108,12 +138,26 @@ Use markdown formatting for structure. Follow the template style guidance closel
     }
 
     const aiData = await aiResponse.json();
-    const rewrittenResume = aiData.choices[0].message.content;
+    const content = aiData.choices[0].message.content;
 
     console.log('Resume rewritten successfully');
 
+    // Parse JSON from response
+    let resumeData;
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        resumeData = JSON.parse(jsonMatch[0]);
+      } else {
+        resumeData = JSON.parse(content);
+      }
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', parseError);
+      throw new Error('Failed to parse resume data');
+    }
+
     return new Response(
-      JSON.stringify({ rewrittenResume }),
+      JSON.stringify({ resumeData }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

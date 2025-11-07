@@ -21,6 +21,37 @@ interface CVAnalysis {
   formatting_feedback: string;
 }
 
+interface ResumeData {
+  name: string;
+  contact: {
+    email?: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    website?: string;
+  };
+  summary: string;
+  experience: Array<{
+    title: string;
+    company: string;
+    location?: string;
+    dates: string;
+    achievements: string[];
+  }>;
+  education: Array<{
+    degree: string;
+    school: string;
+    location?: string;
+    dates: string;
+    details?: string;
+  }>;
+  skills: {
+    technical?: string[];
+    tools?: string[];
+    languages?: string[];
+  };
+}
+
 interface ResumeTemplate {
   id: string;
   name: string;
@@ -74,7 +105,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [fileName, setFileName] = useState<string>("");
   const [cvText, setCvText] = useState<string>("");
   const [isRewriting, setIsRewriting] = useState(false);
-  const [rewrittenResume, setRewrittenResume] = useState<string>("");
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   const [targetRole, setTargetRole] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("modern");
 
@@ -240,7 +271,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
     }
 
     setIsRewriting(true);
-    setRewrittenResume("");
+    setResumeData(null);
 
     try {
       const template = RESUME_TEMPLATES.find(t => t.id === selectedTemplate);
@@ -259,15 +290,15 @@ export const CVUpload = ({ userId }: { userId: string }) => {
         throw new Error(rewriteError.message || 'Failed to rewrite resume');
       }
 
-      if (!rewriteData || !rewriteData.rewrittenResume) {
-        throw new Error('No rewritten resume received');
+      if (!rewriteData || !rewriteData.resumeData) {
+        throw new Error('No resume data received');
       }
 
-      setRewrittenResume(rewriteData.rewrittenResume);
+      setResumeData(rewriteData.resumeData);
       
       toast({
         title: "Resume Rewritten Successfully!",
-        description: "Your improved resume is ready. Review and download below.",
+        description: "Your improved resume is ready. Download as PDF below.",
       });
 
     } catch (error) {
@@ -285,160 +316,214 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(rewrittenResume);
+    if (!resumeData) return;
+    const text = JSON.stringify(resumeData, null, 2);
+    navigator.clipboard.writeText(text);
     toast({
       title: "Copied!",
-      description: "Resume copied to clipboard",
+      description: "Resume data copied to clipboard",
     });
   };
 
   const downloadResume = () => {
+    if (!resumeData) return;
+    
     const doc = new jsPDF();
-    
-    // Clean markdown from text
-    const cleanMarkdown = (text: string): string => {
-      return text
-        .replace(/```markdown/g, '')
-        .replace(/```/g, '')
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-        .replace(/###\s/g, '')
-        .replace(/##\s/g, '')
-        .replace(/#\s/g, '')
-        .trim();
-    };
-    
-    const lines = rewrittenResume.split('\n').map(line => cleanMarkdown(line)).filter(line => line.length > 0);
-    let yPosition = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = pageWidth - (margin * 2);
-    
-    // Professional color scheme
-    const primaryColor: [number, number, number] = [41, 98, 255]; // Professional blue
-    const textColor: [number, number, number] = [51, 51, 51]; // Dark gray
-    
-    doc.setFont("helvetica");
-    
-    // Track if we're in the header section
-    let isFirstLine = true;
-    
-    lines.forEach((line, index) => {
-      // Check if we need a new page
-      if (yPosition > pageHeight - 20) {
+    const margin = 15;
+    let y = 20;
+
+    // Helper function to check if we need a new page
+    const checkNewPage = (requiredSpace: number) => {
+      if (y + requiredSpace > 280) {
         doc.addPage();
-        yPosition = 20;
+        y = 20;
       }
-      
-      const trimmedLine = line.trim();
-      if (!trimmedLine) return;
-      
-      // First line is the name - make it prominent
-      if (isFirstLine && index === 0) {
-        doc.setFontSize(24);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...primaryColor);
-        doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
-        yPosition += 8;
-        
-        // Add a line under the name
-        doc.setDrawColor(...primaryColor);
-        doc.setLineWidth(0.5);
-        doc.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 10;
-        doc.setTextColor(...textColor);
-        isFirstLine = false;
-        return;
-      }
-      
-      // Detect section headers (all caps or starting with common section words)
-      const sectionKeywords = ['PROFESSIONAL SUMMARY', 'SUMMARY', 'EXPERIENCE', 'WORK EXPERIENCE', 
-                               'EDUCATION', 'SKILLS', 'TECHNICAL SKILLS', 'CERTIFICATIONS', 
-                               'PROJECTS', 'ACHIEVEMENTS', 'LANGUAGES', 'CONTACT'];
-      const isSection = sectionKeywords.some(keyword => 
-        trimmedLine.toUpperCase().includes(keyword) || 
-        (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length < 50 && trimmedLine.length > 3)
-      );
-      
-      if (isSection) {
-        // Section heading
-        yPosition += 8;
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...primaryColor);
-        doc.text(trimmedLine.toUpperCase(), margin, yPosition);
-        yPosition += 2;
-        
-        // Add underline for section
-        doc.setDrawColor(...primaryColor);
-        doc.setLineWidth(0.3);
-        doc.line(margin, yPosition, margin + 40, yPosition);
-        yPosition += 6;
-        doc.setTextColor(...textColor);
-        return;
-      }
-      
-      // Detect job titles or roles (lines with dates or companies)
-      const hasDate = /\d{4}|Present|Current/i.test(trimmedLine);
-      const hasPipe = trimmedLine.includes('|');
-      
-      if (hasDate || hasPipe) {
-        // Job title or date line
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(51, 51, 51);
-        
-        // Split by pipe if exists
-        if (hasPipe) {
-          const parts = trimmedLine.split('|').map(p => p.trim());
-          doc.text(parts[0], margin, yPosition);
-          if (parts[1]) {
-            doc.setFont("helvetica", "normal");
-            doc.text(parts[1], pageWidth - margin, yPosition, { align: 'right' });
-          }
-        } else {
-          const splitText = doc.splitTextToSize(trimmedLine, maxWidth);
-          doc.text(splitText, margin, yPosition);
-          yPosition += (splitText.length - 1) * 5;
-        }
-        yPosition += 6;
-        return;
-      }
-      
-      // Bullet points
-      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const text = '• ' + trimmedLine.replace(/^[-•]\s*/, '');
-        const splitText = doc.splitTextToSize(text, maxWidth - 5);
-        doc.text(splitText, margin + 3, yPosition);
-        yPosition += splitText.length * 4.5 + 2;
-        return;
-      }
-      
-      // Contact info (email, phone, etc)
-      if (trimmedLine.includes('@') || trimmedLine.includes('linkedin') || 
-          /\(\d{3}\)|\+\d{1,3}/.test(trimmedLine)) {
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(100, 100, 100);
-        doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
-        yPosition += 5;
-        doc.setTextColor(...textColor);
-        return;
-      }
-      
-      // Regular paragraph text
+    };
+
+    // HEADER - Name and Contact
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(31, 78, 120); // Professional dark blue
+    doc.text(resumeData.name, pageWidth / 2, y, { align: 'center' });
+    y += 8;
+
+    // Contact Info
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    const contactParts = [];
+    if (resumeData.contact.email) contactParts.push(resumeData.contact.email);
+    if (resumeData.contact.phone) contactParts.push(resumeData.contact.phone);
+    if (resumeData.contact.location) contactParts.push(resumeData.contact.location);
+    const contactLine1 = contactParts.join('  |  ');
+    doc.text(contactLine1, pageWidth / 2, y, { align: 'center' });
+    y += 4;
+    
+    const contactParts2 = [];
+    if (resumeData.contact.linkedin) contactParts2.push(resumeData.contact.linkedin);
+    if (resumeData.contact.website) contactParts2.push(resumeData.contact.website);
+    if (contactParts2.length > 0) {
+      doc.text(contactParts2.join('  |  '), pageWidth / 2, y, { align: 'center' });
+      y += 4;
+    }
+
+    // Divider line
+    doc.setDrawColor(31, 78, 120);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    // PROFESSIONAL SUMMARY
+    if (resumeData.summary) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("PROFESSIONAL SUMMARY", margin, y);
+      y += 6;
+
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      const splitText = doc.splitTextToSize(trimmedLine, maxWidth);
-      doc.text(splitText, margin, yPosition);
-      yPosition += splitText.length * 5 + 3;
-    });
-    
-    // Save the PDF
-    doc.save(`resume_${Date.now()}.pdf`);
+      doc.setTextColor(50, 50, 50);
+      const summaryLines = doc.splitTextToSize(resumeData.summary, pageWidth - (margin * 2));
+      doc.text(summaryLines, margin, y);
+      y += summaryLines.length * 4.5 + 6;
+    }
+
+    // EXPERIENCE
+    if (resumeData.experience && resumeData.experience.length > 0) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("PROFESSIONAL EXPERIENCE", margin, y);
+      y += 6;
+
+      resumeData.experience.forEach((job) => {
+        checkNewPage(20);
+        
+        // Job title and dates
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(50, 50, 50);
+        doc.text(job.title, margin, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(job.dates, pageWidth - margin, y, { align: 'right' });
+        y += 5;
+
+        // Company and location
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(80, 80, 80);
+        doc.text(job.company, margin, y);
+        if (job.location) {
+          doc.text(job.location, pageWidth - margin, y, { align: 'right' });
+        }
+        y += 5;
+
+        // Achievements
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50, 50, 50);
+        job.achievements.forEach((achievement) => {
+          checkNewPage(10);
+          const achLines = doc.splitTextToSize(`• ${achievement}`, pageWidth - margin - 20);
+          doc.text(achLines, margin + 5, y);
+          y += achLines.length * 4 + 1;
+        });
+        y += 3;
+      });
+      y += 2;
+    }
+
+    // EDUCATION
+    if (resumeData.education && resumeData.education.length > 0) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("EDUCATION", margin, y);
+      y += 6;
+
+      resumeData.education.forEach((edu) => {
+        checkNewPage(15);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(50, 50, 50);
+        doc.text(edu.degree, margin, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(edu.dates, pageWidth - margin, y, { align: 'right' });
+        y += 5;
+
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(80, 80, 80);
+        doc.text(edu.school, margin, y);
+        if (edu.location) {
+          doc.text(edu.location, pageWidth - margin, y, { align: 'right' });
+        }
+        y += 4;
+
+        if (edu.details) {
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(50, 50, 50);
+          const detailLines = doc.splitTextToSize(edu.details, pageWidth - (margin * 2));
+          doc.text(detailLines, margin, y);
+          y += detailLines.length * 4;
+        }
+        y += 3;
+      });
+      y += 2;
+    }
+
+    // SKILLS
+    if (resumeData.skills) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("SKILLS", margin, y);
+      y += 6;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(50, 50, 50);
+
+      if (resumeData.skills.technical && resumeData.skills.technical.length > 0) {
+        checkNewPage(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Technical:", margin, y);
+        doc.setFont("helvetica", "normal");
+        const techText = resumeData.skills.technical.join(', ');
+        const techLines = doc.splitTextToSize(techText, pageWidth - margin - 30);
+        doc.text(techLines, margin + 25, y);
+        y += techLines.length * 4 + 2;
+      }
+
+      if (resumeData.skills.tools && resumeData.skills.tools.length > 0) {
+        checkNewPage(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Tools:", margin, y);
+        doc.setFont("helvetica", "normal");
+        const toolsText = resumeData.skills.tools.join(', ');
+        const toolsLines = doc.splitTextToSize(toolsText, pageWidth - margin - 30);
+        doc.text(toolsLines, margin + 25, y);
+        y += toolsLines.length * 4 + 2;
+      }
+
+      if (resumeData.skills.languages && resumeData.skills.languages.length > 0) {
+        checkNewPage(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Languages:", margin, y);
+        doc.setFont("helvetica", "normal");
+        const langText = resumeData.skills.languages.join(', ');
+        const langLines = doc.splitTextToSize(langText, pageWidth - margin - 30);
+        doc.text(langLines, margin + 25, y);
+        y += langLines.length * 4;
+      }
+    }
+
+    doc.save(`professional_resume_${Date.now()}.pdf`);
     
     toast({
       title: "Downloaded!",
@@ -653,37 +738,88 @@ export const CVUpload = ({ userId }: { userId: string }) => {
       )}
 
       {/* Rewritten Resume Display */}
-      {rewrittenResume && (
+      {resumeData && (
         <Card className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Your Rewritten Resume
+              Your Professional Resume
             </h3>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={copyToClipboard}>
                 <Copy className="w-4 h-4 mr-2" />
-                Copy
+                Copy Data
               </Button>
-              <Button variant="outline" size="sm" onClick={downloadResume}>
+              <Button size="sm" onClick={downloadResume}>
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
               </Button>
             </div>
           </div>
 
-          <div className="bg-muted/50 rounded-lg p-6 max-h-[600px] overflow-y-auto">
-            <Textarea
-              value={rewrittenResume}
-              onChange={(e) => setRewrittenResume(e.target.value)}
-              className="min-h-[500px] font-mono text-sm bg-transparent border-none focus-visible:ring-0"
-              placeholder="Your rewritten resume will appear here..."
-            />
+          <div className="bg-muted/50 rounded-lg p-6 space-y-6">
+            {/* Preview of the resume data */}
+            <div className="space-y-4">
+              <div className="text-center border-b pb-4">
+                <h2 className="text-2xl font-bold text-primary">{resumeData.name}</h2>
+                <div className="text-sm text-muted-foreground mt-2 space-x-2">
+                  {resumeData.contact.email && <span>{resumeData.contact.email}</span>}
+                  {resumeData.contact.phone && <span>• {resumeData.contact.phone}</span>}
+                  {resumeData.contact.location && <span>• {resumeData.contact.location}</span>}
+                </div>
+              </div>
+
+              {resumeData.summary && (
+                <div>
+                  <h3 className="font-bold text-primary mb-2">PROFESSIONAL SUMMARY</h3>
+                  <p className="text-sm">{resumeData.summary}</p>
+                </div>
+              )}
+
+              {resumeData.experience && resumeData.experience.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-primary mb-2">EXPERIENCE</h3>
+                  {resumeData.experience.slice(0, 2).map((job, idx) => (
+                    <div key={idx} className="mb-3">
+                      <div className="flex justify-between">
+                        <p className="font-semibold text-sm">{job.title}</p>
+                        <p className="text-xs text-muted-foreground">{job.dates}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic">{job.company}</p>
+                      <ul className="text-xs mt-1 space-y-1">
+                        {job.achievements.slice(0, 2).map((ach, i) => (
+                          <li key={i}>• {ach}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  {resumeData.experience.length > 2 && (
+                    <p className="text-xs text-muted-foreground italic">
+                      + {resumeData.experience.length - 2} more positions...
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {resumeData.skills && (
+                <div>
+                  <h3 className="font-bold text-primary mb-2">SKILLS</h3>
+                  <div className="text-xs space-y-1">
+                    {resumeData.skills.technical && (
+                      <p><span className="font-semibold">Technical:</span> {resumeData.skills.technical.join(', ')}</p>
+                    )}
+                    {resumeData.skills.tools && (
+                      <p><span className="font-semibold">Tools:</span> {resumeData.skills.tools.join(', ')}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-900">
-              <strong>Tip:</strong> Review the rewritten content carefully and make any personal adjustments before using it. You can edit the text directly above.
+              <strong>Ready to download!</strong> Click "Download PDF" above to get your professionally formatted resume.
             </p>
           </div>
         </Card>
