@@ -8,94 +8,108 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* UtopiaHire Theme - Empowerment & Inclusivity */
+    --background: 35 20% 97%;
+    --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 220 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary: Warm sunset orange - Hope & Opportunity */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary: Deep professional blue - Trust */
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 35 20% 97%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Muted: Soft neutral */
+    --muted: 35 15% 92%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    /* Accent: Vibrant teal - Growth & Fairness */
+    --accent: 175 60% 45%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    /* Enhanced Shadows with warmth */
+    --shadow-sm: 0 1px 2px 0 rgba(237, 108, 46, 0.08);
+    --shadow-md: 0 4px 12px -2px rgba(237, 108, 46, 0.12);
+    --shadow-lg: 0 20px 25px -5px rgba(237, 108, 46, 0.15);
+    --shadow-glow: 0 0 40px rgba(237, 108, 46, 0.2);
+    
+    /* Gradients for empowerment */
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(35 90% 60%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(215 25% 27%) 0%, hsl(175 60% 45%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(35 20% 97%) 0%, hsl(35 30% 95%) 100%);
     
     /* Transitions */
-    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-fast: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 215 25% 27%;
+    --sidebar-foreground: 35 20% 97%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 32%;
+    --sidebar-accent-foreground: 35 20% 97%;
+    --sidebar-border: 215 20% 35%;
+    --sidebar-ring: 25 95% 53%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Dark mode: Warm, empowering night theme */
+    --background: 220 20% 12%;
+    --foreground: 35 20% 95%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 18% 15%;
+    --card-foreground: 35 20% 95%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 18% 15%;
+    --popover-foreground: 35 20% 95%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
+    /* Primary: Bright sunset orange */
+    --primary: 25 95% 58%;
+    --primary-foreground: 220 20% 12%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary: Rich deep blue */
+    --secondary: 215 30% 20%;
+    --secondary-foreground: 35 20% 95%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 35 10% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent: Luminous teal */
+    --accent: 175 55% 50%;
+    --accent-foreground: 220 20% 12%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 35 20% 95%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 224 76% 48%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 25 95% 58%;
     
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px -2px rgba(237, 108, 46, 0.2);
+    --shadow-lg: 0 20px 25px -5px rgba(237, 108, 46, 0.25);
+    --shadow-glow: 0 0 50px rgba(237, 108, 46, 0.3);
+    
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 58%) 0%, hsl(35 85% 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(215 30% 20%) 0%, hsl(175 55% 50%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 20% 12%) 0%, hsl(220 18% 15%) 100%);
   }
 }
 
