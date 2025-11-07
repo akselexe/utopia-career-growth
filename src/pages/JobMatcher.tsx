@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Sparkles, TrendingUp, Target, Briefcase, MapPin, DollarSign, Loader2, Search, Zap, ExternalLink } from "lucide-react";
+import { ArrowLeft, Sparkles, TrendingUp, Target, Briefcase, MapPin, DollarSign, Loader2, Search, ExternalLink } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +32,6 @@ const JobMatcher = () => {
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [hasCV, setHasCV] = useState(false);
   const [aiMatches, setAiMatches] = useState<MatchedJob[]>([]);
-  const [isMatching, setIsMatching] = useState(false);
   const [showAiMatches, setShowAiMatches] = useState(false);
 
   useEffect(() => {
@@ -64,7 +63,51 @@ const JobMatcher = () => {
 
       setUserLocation(profile?.location || null);
 
-      // Fetch jobs - prioritize by location if available
+      // Fetch matched applications
+      const { data: applications, error: appError } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('seeker_id', user.id)
+        .order('match_score', { ascending: false });
+
+      if (appError) throw appError;
+
+      // Fetch AI matches if available
+      if (applications && applications.length > 0) {
+        const jobIds = applications.map(app => app.job_id);
+        const { data: jobs, error: jobsError } = await supabase
+          .from('jobs')
+          .select('*')
+          .in('id', jobIds);
+
+        if (jobsError) throw jobsError;
+
+        // Combine applications with job details
+        const matchedJobsList = applications.map(app => {
+          const job = jobs?.find(j => j.id === app.job_id);
+          return {
+            ...job,
+            match_score: app.match_score,
+            application_status: app.status
+          };
+        }).filter(job => job.id); // Filter out any null jobs
+
+        setAiMatches(matchedJobsList.map(job => ({
+          job_id: job.id,
+          job_title: job.title,
+          job_location: job.location,
+          match_score: job.match_score,
+          matching_skills: [],
+          missing_skills: [],
+          recommendation: '',
+          job_details: job,
+          is_external: false
+        })));
+
+        setShowAiMatches(matchedJobsList.length > 0);
+      }
+
+      // Fetch all active jobs for browsing
       let query = supabase
         .from('jobs')
         .select('*')
@@ -101,58 +144,6 @@ const JobMatcher = () => {
     }
   };
 
-  const runAiMatching = async () => {
-    if (!user) return;
-    
-    setIsMatching(true);
-    try {
-      // Get latest CV
-      const { data: cvData } = await supabase
-        .from('cvs')
-        .select('ai_analysis')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!cvData?.ai_analysis) {
-        toast({
-          title: "No CV Analysis",
-          description: "Please upload and analyze your CV first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Call match-jobs function
-      const { data, error } = await supabase.functions.invoke('match-jobs', {
-        body: {
-          cvAnalysis: cvData.ai_analysis,
-          userId: user.id
-        }
-      });
-
-      if (error) throw error;
-
-      setAiMatches(data.matches || []);
-      setShowAiMatches(true);
-      
-      toast({
-        title: "AI Matching Complete!",
-        description: `Found ${data.total} high-quality matches for your profile.`,
-      });
-    } catch (error) {
-      console.error('Error running AI matching:', error);
-      toast({
-        title: "Matching Failed",
-        description: "Could not complete AI job matching. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsMatching(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -184,28 +175,12 @@ const JobMatcher = () => {
                   {userLocation ? `Jobs near ${userLocation}` : 'Personalized job recommendations'}
                 </p>
               </div>
-              <div className="flex gap-2">
-                {hasCV && (
-                  <Button 
-                    onClick={runAiMatching} 
-                    disabled={isMatching}
-                    className="gap-2"
-                  >
-                    {isMatching ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Zap className="w-4 h-4" />
-                    )}
-                    AI Match Jobs
-                  </Button>
-                )}
-                <Link to="/footprint-scanner">
-                  <Button variant="outline" className="gap-2">
-                    <Search className="w-4 h-4" />
-                    Footprint Scanner
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/footprint-scanner">
+                <Button variant="outline" className="gap-2">
+                  <Search className="w-4 h-4" />
+                  Footprint Scanner
+                </Button>
+              </Link>
             </div>
           </div>
         </header>
@@ -407,10 +382,10 @@ const JobMatcher = () => {
                           <div className="flex items-center gap-1">
                             <DollarSign className="w-4 h-4" />
                             {job.salary_min && job.salary_max 
-                              ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
+                              ? `${job.currency || 'USD'} ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`
                               : job.salary_min 
-                              ? `From $${job.salary_min.toLocaleString()}`
-                              : `Up to $${job.salary_max.toLocaleString()}`
+                              ? `From ${job.currency || 'USD'} ${job.salary_min.toLocaleString()}`
+                              : `Up to ${job.currency || 'USD'} ${job.salary_max.toLocaleString()}`
                             }
                           </div>
                         )}

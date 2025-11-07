@@ -73,6 +73,14 @@ serve(async (req) => {
               const externalData = await response.json();
               const externalJobs = externalData.data || [];
               
+              // Currency mapping for countries
+              const currencyMap: Record<string, string> = {
+                'ae': 'AED', 'sa': 'SAR', 'eg': 'EGP', 'ma': 'MAD', 
+                'qa': 'QAR', 'kw': 'KWD', 'om': 'OMR', 'bh': 'BHD',
+                'jo': 'JOD', 'lb': 'LBP', 'za': 'ZAR', 'ng': 'NGN',
+                'ke': 'KES', 'tn': 'TND'
+              };
+              
               // Map external jobs to internal format
               for (const job of externalJobs.slice(0, 20)) { // Limit per country
                 allJobs.push({
@@ -83,6 +91,7 @@ serve(async (req) => {
                   requirements: job.job_highlights?.Qualifications?.join(', ') || 'Not specified',
                   salary_min: job.job_min_salary || null,
                   salary_max: job.job_max_salary || null,
+                  currency: currencyMap[country] || 'USD',
                   skills_required: job.job_required_skills || [],
                   company_id: null, // External job
                   status: 'active',
