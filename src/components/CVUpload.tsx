@@ -295,72 +295,146 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const downloadResume = () => {
     const doc = new jsPDF();
     
-    // Parse markdown and convert to plain text with basic formatting
-    const lines = rewrittenResume.split('\n');
+    // Clean markdown from text
+    const cleanMarkdown = (text: string): string => {
+      return text
+        .replace(/```markdown/g, '')
+        .replace(/```/g, '')
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/###\s/g, '')
+        .replace(/##\s/g, '')
+        .replace(/#\s/g, '')
+        .trim();
+    };
+    
+    const lines = rewrittenResume.split('\n').map(line => cleanMarkdown(line)).filter(line => line.length > 0);
     let yPosition = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const maxWidth = pageWidth - (margin * 2);
     
+    // Professional color scheme
+    const primaryColor: [number, number, number] = [41, 98, 255]; // Professional blue
+    const textColor: [number, number, number] = [51, 51, 51]; // Dark gray
+    
     doc.setFont("helvetica");
     
-    lines.forEach((line) => {
+    // Track if we're in the header section
+    let isFirstLine = true;
+    
+    lines.forEach((line, index) => {
       // Check if we need a new page
       if (yPosition > pageHeight - 20) {
         doc.addPage();
         yPosition = 20;
       }
       
-      // Handle different markdown elements
-      if (line.startsWith('# ')) {
-        // Main heading
-        doc.setFontSize(18);
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return;
+      
+      // First line is the name - make it prominent
+      if (isFirstLine && index === 0) {
+        doc.setFontSize(24);
         doc.setFont("helvetica", "bold");
-        const text = line.replace('# ', '');
-        doc.text(text, margin, yPosition);
-        yPosition += 12;
-      } else if (line.startsWith('## ')) {
-        // Section heading
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        const text = line.replace('## ', '');
-        doc.text(text, margin, yPosition);
+        doc.setTextColor(...primaryColor);
+        doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 8;
+        
+        // Add a line under the name
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.5);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += 10;
-      } else if (line.startsWith('### ')) {
-        // Subsection heading
+        doc.setTextColor(...textColor);
+        isFirstLine = false;
+        return;
+      }
+      
+      // Detect section headers (all caps or starting with common section words)
+      const sectionKeywords = ['PROFESSIONAL SUMMARY', 'SUMMARY', 'EXPERIENCE', 'WORK EXPERIENCE', 
+                               'EDUCATION', 'SKILLS', 'TECHNICAL SKILLS', 'CERTIFICATIONS', 
+                               'PROJECTS', 'ACHIEVEMENTS', 'LANGUAGES', 'CONTACT'];
+      const isSection = sectionKeywords.some(keyword => 
+        trimmedLine.toUpperCase().includes(keyword) || 
+        (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length < 50 && trimmedLine.length > 3)
+      );
+      
+      if (isSection) {
+        // Section heading
+        yPosition += 8;
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        const text = line.replace('### ', '');
-        doc.text(text, margin, yPosition);
-        yPosition += 8;
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        // Bullet points
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const text = '• ' + line.replace(/^[-*]\s/, '');
-        const splitText = doc.splitTextToSize(text, maxWidth - 10);
-        doc.text(splitText, margin + 5, yPosition);
-        yPosition += splitText.length * 5 + 2;
-      } else if (line.startsWith('**') && line.endsWith('**')) {
-        // Bold text
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        const text = line.replace(/\*\*/g, '');
-        const splitText = doc.splitTextToSize(text, maxWidth);
-        doc.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 5 + 2;
-      } else if (line.trim() === '') {
-        // Empty line - add spacing
-        yPosition += 4;
-      } else {
-        // Regular text
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const splitText = doc.splitTextToSize(line, maxWidth);
-        doc.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 5 + 2;
+        doc.setTextColor(...primaryColor);
+        doc.text(trimmedLine.toUpperCase(), margin, yPosition);
+        yPosition += 2;
+        
+        // Add underline for section
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.3);
+        doc.line(margin, yPosition, margin + 40, yPosition);
+        yPosition += 6;
+        doc.setTextColor(...textColor);
+        return;
       }
+      
+      // Detect job titles or roles (lines with dates or companies)
+      const hasDate = /\d{4}|Present|Current/i.test(trimmedLine);
+      const hasPipe = trimmedLine.includes('|');
+      
+      if (hasDate || hasPipe) {
+        // Job title or date line
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(51, 51, 51);
+        
+        // Split by pipe if exists
+        if (hasPipe) {
+          const parts = trimmedLine.split('|').map(p => p.trim());
+          doc.text(parts[0], margin, yPosition);
+          if (parts[1]) {
+            doc.setFont("helvetica", "normal");
+            doc.text(parts[1], pageWidth - margin, yPosition, { align: 'right' });
+          }
+        } else {
+          const splitText = doc.splitTextToSize(trimmedLine, maxWidth);
+          doc.text(splitText, margin, yPosition);
+          yPosition += (splitText.length - 1) * 5;
+        }
+        yPosition += 6;
+        return;
+      }
+      
+      // Bullet points
+      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const text = '• ' + trimmedLine.replace(/^[-•]\s*/, '');
+        const splitText = doc.splitTextToSize(text, maxWidth - 5);
+        doc.text(splitText, margin + 3, yPosition);
+        yPosition += splitText.length * 4.5 + 2;
+        return;
+      }
+      
+      // Contact info (email, phone, etc)
+      if (trimmedLine.includes('@') || trimmedLine.includes('linkedin') || 
+          /\(\d{3}\)|\+\d{1,3}/.test(trimmedLine)) {
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text(trimmedLine, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 5;
+        doc.setTextColor(...textColor);
+        return;
+      }
+      
+      // Regular paragraph text
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const splitText = doc.splitTextToSize(trimmedLine, maxWidth);
+      doc.text(splitText, margin, yPosition);
+      yPosition += splitText.length * 5 + 3;
     });
     
     // Save the PDF
@@ -368,7 +442,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
     
     toast({
       title: "Downloaded!",
-      description: "Resume PDF downloaded successfully",
+      description: "Professional resume PDF downloaded successfully",
     });
   };
 
