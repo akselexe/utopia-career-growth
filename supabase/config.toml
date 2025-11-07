@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.analyze-behavior]
 verify_jwt = true
+
+[functions.generate-profile]
+verify_jwt = true

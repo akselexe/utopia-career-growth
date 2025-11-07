@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Send, Square, Loader2, Mic, Video, MicOff, VideoOff } from "lucide-react";
+import { Sparkles, Send, Square, Loader2, Mic, Video, MicOff, VideoOff, TrendingUp, TrendingDown, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from 'react-markdown';
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -20,6 +21,8 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [behavioralFeedback, setBehavioralFeedback] = useState<string[]>([]);
   const [showReport, setShowReport] = useState(false);
+  const [profileAnalysis, setProfileAnalysis] = useState<string>("");
+  const [isGeneratingProfile, setIsGeneratingProfile] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -742,30 +745,52 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     }
   };
 
-  const stopInterview = () => {
+  const stopInterview = async () => {
     stopCamera();
-    setMessages([]);
-    setInputValue("");
     
-    // Show report if we have behavioral feedback
-    if (behavioralFeedback.length > 0) {
-      setShowReport(true);
-      toast({
-        title: "Interview Complete!",
-        description: "Your behavioral analysis report is ready!",
-      });
-    } else {
-      setHasStarted(false);
-      toast({
-        title: "Interview Complete!",
-        description: "Good job practicing!",
-      });
+    // Generate comprehensive profile analysis
+    if (messages.length > 0) {
+      setIsGeneratingProfile(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-profile', {
+          body: { 
+            messages, 
+            behavioralFeedback,
+            jobTitle 
+          }
+        });
+
+        if (error) {
+          console.error("Profile generation error:", error);
+          toast({
+            title: "Profile Generation Failed",
+            description: "Could not generate profile analysis. Showing behavioral feedback only.",
+            variant: "destructive",
+          });
+        } else if (data?.profileAnalysis) {
+          setProfileAnalysis(data.profileAnalysis);
+        }
+      } catch (error) {
+        console.error("Error generating profile:", error);
+      } finally {
+        setIsGeneratingProfile(false);
+      }
     }
+    
+    setShowReport(true);
+    toast({
+      title: "Interview Complete!",
+      description: "Generating your comprehensive profile report...",
+    });
   };
 
   const closeReport = () => {
     setShowReport(false);
     setBehavioralFeedback([]);
+    setProfileAnalysis("");
+    setMessages([]);
+    setInputValue("");
+    setHasStarted(false);
   };
 
   return (
@@ -877,29 +902,72 @@ export const AIInterview = ({ userId }: { userId: string }) => {
                 </div>
               )}
               
-              {/* Show report after interview */}
-              {showReport && behavioralFeedback.length > 0 && (
+              {/* Show comprehensive profile report after interview */}
+              {showReport && (
                 <div className="bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/30 rounded-lg p-6 shadow-lg">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-accent" />
-                      Behavioral Analysis Report
+                      <Target className="w-5 h-5 text-accent" />
+                      Interview Profile Report
                     </h3>
                     <Button size="sm" variant="outline" onClick={closeReport}>
-                      Close & Reset
+                      Close & Start New
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Based on {behavioralFeedback.length} analysis{behavioralFeedback.length !== 1 ? 'es' : ''} during your interview
-                  </p>
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                    {behavioralFeedback.map((feedback, i) => (
-                      <div key={i} className="text-sm p-4 bg-background/80 backdrop-blur rounded-lg border border-border shadow-sm">
-                        <span className="font-semibold text-primary">Analysis {i + 1}</span>
-                        <p className="mt-2 whitespace-pre-wrap leading-relaxed">{feedback}</p>
+                  
+                  {isGeneratingProfile ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                        <p className="text-sm text-muted-foreground">
+                          Analyzing your interview performance...
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : profileAnalysis ? (
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                      <div className="prose prose-sm max-w-none">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-lg font-semibold text-foreground mt-4 mb-2 flex items-center gap-2" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="text-base font-semibold text-foreground mt-3 mb-2" {...props} />,
+                            p: ({node, ...props}) => <p className="text-sm text-muted-foreground mb-3 leading-relaxed" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-2 mb-3" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-2 mb-3" {...props} />,
+                            li: ({node, ...props}) => <li className="text-sm text-muted-foreground ml-2" {...props} />,
+                            strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-primary pl-4 italic my-3" {...props} />,
+                          }}
+                        >
+                          {profileAnalysis}
+                        </ReactMarkdown>
+                      </div>
+                      
+                      {behavioralFeedback.length > 0 && (
+                        <div className="mt-6 pt-6 border-t">
+                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <Video className="w-4 h-4" />
+                            Behavioral Analysis Details ({behavioralFeedback.length} snapshots)
+                          </h3>
+                          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                            {behavioralFeedback.map((feedback, i) => (
+                              <div key={i} className="text-xs p-3 bg-background/60 rounded-lg border border-border/50">
+                                <span className="font-semibold text-primary">Snapshot {i + 1}</span>
+                                <p className="mt-1 text-muted-foreground">{feedback}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-sm text-muted-foreground">
+                        No profile data available. Try conducting a longer interview.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
