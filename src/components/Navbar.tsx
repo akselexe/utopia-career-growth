@@ -18,29 +18,29 @@ export const Navbar = () => {
   return (
     <>
       {/* Desktop Floating Navbar */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 hidden md:block">
-        <div className="bg-foreground/95 backdrop-blur-md rounded-full shadow-2xl px-6 py-3 flex items-center gap-8">
+      <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 hidden md:block">
+        <div className="bg-foreground/60 backdrop-blur-xl rounded-full shadow-2xl px-8 py-4 flex items-center gap-12">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-background hover:text-primary transition-colors">
-            <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-foreground" />
+            <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center">
+              <Briefcase className="w-6 h-6 text-foreground" />
             </div>
           </Link>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-6">
-            <Link to="/jobs" className="text-sm text-background/80 hover:text-background transition-colors font-medium">
+          <div className="flex items-center gap-8">
+            <Link to="/jobs" className="text-base text-background/90 hover:text-background transition-colors font-medium">
               Jobs
             </Link>
-            <Link to="/job-matcher" className="text-sm text-background/80 hover:text-background transition-colors font-medium">
+            <Link to="/job-matcher" className="text-base text-background/90 hover:text-background transition-colors font-medium">
               Matcher
             </Link>
             {userRole === "seeker" && (
               <>
-                <Link to="/cv-review" className="text-sm text-background/80 hover:text-background transition-colors font-medium">
+                <Link to="/cv-review" className="text-base text-background/90 hover:text-background transition-colors font-medium">
                   CV Review
                 </Link>
-                <Link to="/ai-interview" className="text-sm text-background/80 hover:text-background transition-colors font-medium">
+                <Link to="/ai-interview" className="text-base text-background/90 hover:text-background transition-colors font-medium">
                   Interview
                 </Link>
               </>
@@ -48,15 +48,15 @@ export const Navbar = () => {
           </div>
 
           {/* User Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Link to="/profile-settings" className="text-sm text-background/80 hover:text-background transition-colors font-medium">
+                <Link to="/profile-settings" className="text-base text-background/90 hover:text-background transition-colors font-medium">
                   Settings
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-1.5 rounded-full bg-background text-foreground text-sm font-medium hover:bg-background/90 transition-colors"
+                  className="px-6 py-2 rounded-full bg-background text-foreground text-base font-medium hover:bg-background/90 transition-colors"
                 >
                   Sign Out
                 </button>
@@ -64,9 +64,9 @@ export const Navbar = () => {
             ) : (
               <button
                 onClick={() => navigate("/auth")}
-                className="px-4 py-1.5 rounded-full bg-background text-foreground text-sm font-medium hover:bg-background/90 transition-colors"
+                className="px-6 py-2 rounded-full bg-background text-foreground text-base font-medium hover:bg-background/90 transition-colors"
               >
-                {user?.email || "Sign In"}
+                Sign In
               </button>
             )}
           </div>
@@ -75,7 +75,7 @@ export const Navbar = () => {
 
       {/* Mobile Navbar */}
       <nav className="fixed top-4 left-4 right-4 z-50 md:hidden">
-        <div className="bg-foreground/95 backdrop-blur-md rounded-full shadow-2xl px-4 py-3 flex items-center justify-between">
+        <div className="bg-foreground/60 backdrop-blur-xl rounded-full shadow-2xl px-5 py-3.5 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-background">
             <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center">

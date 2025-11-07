@@ -21,32 +21,7 @@ const AIInterviewPage = () => {
           <div className="w-[18vw] h-[18vw] bg-gradient-to-br from-yellow-200/8 via-amber-200/8 to-violet-200/6 rounded-full blur-xl absolute top-2/3 right-0 opacity-60" />
         </div>
 
-        {/* Header */}
-        <div className="border-b bg-card/80 backdrop-blur-sm z-10 relative">
-          <div className="container mx-auto px-4 py-5 flex items-center gap-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard/seeker')}
-              className="rounded-full"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <Video className="w-7 h-7 text-primary" />
-                <h1 className="text-2xl font-semibold text-foreground">
-                  AI Interview Practice
-                </h1>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Practice interviews and get real-time feedback
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-12 relative z-10">
+        <div className="container mx-auto px-4 py-12 relative z-10 pt-24">
           <div className="max-w-5xl mx-auto space-y-12">
             {/* Main Interview Component */}
             <AIInterview userId={user!.id} />

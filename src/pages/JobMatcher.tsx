@@ -155,37 +155,7 @@ const JobMatcher = () => {
   return (
     <ProtectedRoute requiredUserType="seeker">
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-6">
-            <div className="flex h-16 items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/dashboard/seeker')}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                  <h1 className="text-2xl font-bold">Job Matcher</h1>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {userLocation ? `Jobs near ${userLocation}` : 'Personalized job recommendations'}
-                </p>
-              </div>
-              <Link to="/footprint-scanner">
-                <Button variant="outline" className="gap-2">
-                  <Search className="w-4 h-4" />
-                  Footprint Scanner
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </header>
-        
-        <main className="container mx-auto px-6 py-8">
+        <main className="container mx-auto px-6 py-8 pt-24">
           {!hasCV ? (
             <Card className="p-12 text-center max-w-2xl mx-auto">
               <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />

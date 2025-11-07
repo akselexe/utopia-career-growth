@@ -217,50 +217,8 @@ const SeekerDashboard = () => {
   return (
     <ProtectedRoute requiredUserType="seeker">
       <div className="min-h-screen bg-background">
-        {/* Header with Navbar */}
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-6">
-            <div className="flex h-16 items-center justify-between">
-              <div className="flex items-center gap-8">
-                <Link to="/dashboard/seeker" className="flex items-center gap-2">
-                  <BarChart3 className="w-6 h-6 text-primary" />
-                  <span className="font-semibold text-lg">Career Hub</span>
-                </Link>
-                <nav className="hidden md:flex items-center gap-6">
-                  <Link to="/cv-review" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                    Resume Review
-                  </Link>
-                  <Link to="/ai-interview" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                    AI Interview
-                  </Link>
-                  <Link to="/job-matcher" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                    Job Matcher
-                  </Link>
-                </nav>
-              </div>
-              <div className="flex items-center gap-2">
-                <Link to="/profile-settings">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline">Profile</span>
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={signOut}
-                  className="gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Main Content */}
-        <main className="container mx-auto px-6 py-8">
+        <main className="container mx-auto px-6 py-8 pt-24">
           {/* Hero Section */}
           <div className="mb-12">
             <h1 className="text-4xl font-bold mb-2">Career Insights Dashboard</h1>

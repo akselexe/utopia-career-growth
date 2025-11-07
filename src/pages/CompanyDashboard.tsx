@@ -138,21 +138,8 @@ const CompanyDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-24">
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold">Company Dashboard</h1>
-            <p className="text-muted-foreground text-lg">
-              Find the perfect talent for your team
-            </p>
-          </div>
-          <Button variant="outline" onClick={signOut} className="gap-2">
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
-        </div>
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
