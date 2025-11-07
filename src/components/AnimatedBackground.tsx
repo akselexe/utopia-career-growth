@@ -84,6 +84,146 @@ function Particles({ count = 100 }: { count?: number }) {
   );
 }
 
+// Islamic Star Pattern (8-pointed star)
+function IslamicStar({ position }: { position: [number, number, number] }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const starShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const points = 8;
+    const outerRadius = 0.8;
+    const innerRadius = 0.4;
+    
+    for (let i = 0; i < points * 2; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = (i * Math.PI) / points;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      
+      if (i === 0) {
+        shape.moveTo(x, y);
+      } else {
+        shape.lineTo(x, y);
+      }
+    }
+    shape.closePath();
+    
+    return new THREE.ShapeGeometry(shape);
+  }, []);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.z = state.clock.getElapsedTime() * 0.2;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.5) * 0.5;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={position} geometry={starShape}>
+      <meshStandardMaterial color="#2ba5a5" transparent opacity={0.3} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+// Adinkra Symbol - Gye Nyame (Supremacy of God)
+function AdinkraSymbol({ position }: { position: [number, number, number] }) {
+  const meshRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
+      meshRef.current.position.y = position[1] + Math.cos(state.clock.getElapsedTime() * 0.6) * 0.4;
+    }
+  });
+
+  return (
+    <group ref={meshRef} position={position}>
+      {/* Central circle */}
+      <mesh>
+        <torusGeometry args={[0.5, 0.1, 16, 32]} />
+        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
+      </mesh>
+      {/* Cross pattern */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.15, 1.2, 0.15]} />
+        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
+      </mesh>
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[1.2, 0.15, 0.15]} />
+        <meshStandardMaterial color="#ed6c2e" transparent opacity={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+// Geometric Hexagon (Berber/Islamic pattern)
+function GeometricHexagon({ position }: { position: [number, number, number] }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const hexShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const sides = 6;
+    const radius = 0.6;
+    
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * 2 * Math.PI) / sides;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      
+      if (i === 0) {
+        shape.moveTo(x, y);
+      } else {
+        shape.lineTo(x, y);
+      }
+    }
+    shape.closePath();
+    
+    return new THREE.ShapeGeometry(shape);
+  }, []);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.z = -state.clock.getElapsedTime() * 0.15;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.getElapsedTime() * 0.7 + position[0]) * 0.6;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={position} geometry={hexShape}>
+      <meshStandardMaterial color="#2ba5a5" transparent opacity={0.25} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+// Diamond Pattern (Common in both African and MENA art)
+function DiamondPattern({ position }: { position: [number, number, number] }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const diamondShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0.8);
+    shape.lineTo(0.6, 0);
+    shape.lineTo(0, -0.8);
+    shape.lineTo(-0.6, 0);
+    shape.closePath();
+    
+    return new THREE.ShapeGeometry(shape);
+  }, []);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.z = state.clock.getElapsedTime() * 0.25;
+      meshRef.current.position.y = position[1] + Math.cos(state.clock.getElapsedTime() * 0.8 + position[2]) * 0.5;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={position} geometry={diamondShape}>
+      <meshStandardMaterial color="#ed6c2e" transparent opacity={0.3} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
 // Main Scene
 function Scene() {
   return (
@@ -101,6 +241,26 @@ function Scene() {
       
       {/* Subtle Particles */}
       <Particles count={80} />
+      
+      {/* Cultural Geometric Shapes */}
+      {/* Islamic Stars */}
+      <IslamicStar position={[-8, 3, -5]} />
+      <IslamicStar position={[10, 5, -8]} />
+      <IslamicStar position={[-6, 7, 5]} />
+      
+      {/* Adinkra Symbols */}
+      <AdinkraSymbol position={[8, 4, -3]} />
+      <AdinkraSymbol position={[-10, 6, 3]} />
+      
+      {/* Geometric Hexagons */}
+      <GeometricHexagon position={[5, 5, -7]} />
+      <GeometricHexagon position={[-7, 4, 2]} />
+      <GeometricHexagon position={[12, 6, -2]} />
+      
+      {/* Diamond Patterns */}
+      <DiamondPattern position={[-5, 8, -4]} />
+      <DiamondPattern position={[7, 3, 4]} />
+      <DiamondPattern position={[-9, 5, -6]} />
     </>
   );
 }
