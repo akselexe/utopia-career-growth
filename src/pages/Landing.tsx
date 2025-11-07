@@ -16,16 +16,15 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { TraditionalPattern, FloatingElements } from "@/components/TraditionalPattern";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-background to-muted/10">
-        {/* Traditional Patterns Background */}
-        <TraditionalPattern />
-        <FloatingElements />
+      <section className="relative overflow-hidden bg-gradient-to-b from-background to-muted/10 min-h-[80vh] flex items-center">
+        {/* Animated 3D Background */}
+        <AnimatedBackground />
         
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
           <div className="max-w-5xl mx-auto text-center space-y-8">
