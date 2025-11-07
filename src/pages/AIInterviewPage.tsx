@@ -10,6 +10,8 @@ const AIInterviewPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  if (!user) return null;
+
   return (
     <ProtectedRoute requiredUserType="seeker">
       <div className="min-h-screen bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-x-hidden">
