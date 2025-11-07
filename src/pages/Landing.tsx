@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TraditionalPattern, FloatingElements } from "@/components/TraditionalPattern";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 const Landing = () => {
   return (
@@ -26,6 +27,7 @@ const Landing = () => {
         {/* Traditional Patterns Background */}
         <TraditionalPattern />
         <FloatingElements />
+        <AnimatedBackground />
         
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
           <div className="max-w-5xl mx-auto text-center space-y-8">
