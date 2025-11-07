@@ -138,7 +138,7 @@ const CompanyDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-24">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-16">
       <div className="container mx-auto px-4 py-8 space-y-8">
 
         {/* Quick Stats */}

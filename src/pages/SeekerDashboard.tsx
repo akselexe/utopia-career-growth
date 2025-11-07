@@ -216,9 +216,9 @@ const SeekerDashboard = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         {/* Main Content */}
-        <main className="container mx-auto px-6 py-8 pt-24">
+        <main className="container mx-auto px-6 py-8">
           {/* Hero Section */}
           <div className="mb-12">
             <h1 className="text-4xl font-bold mb-2">Career Insights Dashboard</h1>

@@ -188,8 +188,8 @@ const FootprintScanner = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-6 py-8 max-w-5xl pt-24">
+      <div className="min-h-screen bg-background pt-16">
+        <main className="container mx-auto px-6 py-8 max-w-5xl">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Footprint Scanner</h1>
             <p className="text-muted-foreground text-lg">Analyze your public contributions across platforms</p>

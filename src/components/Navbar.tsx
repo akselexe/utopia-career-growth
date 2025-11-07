@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Briefcase } from "lucide-react";
@@ -7,8 +7,14 @@ import { useState } from "react";
 export const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const userRole = user?.user_metadata?.user_type;
+  
+  // Don't show navbar on landing and auth pages
+  if (location.pathname === "/" || location.pathname === "/auth") {
+    return null;
+  }
 
   const handleSignOut = async () => {
     await signOut();
@@ -17,175 +23,130 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Desktop Floating Navbar */}
-      <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 hidden md:block">
-        <div className="bg-foreground/60 backdrop-blur-xl rounded-full shadow-2xl px-8 py-4 flex items-center gap-12">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-background hover:text-primary transition-colors">
-            <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-foreground" />
+      {/* Desktop Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 hidden md:block border-b border-border/40 bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+              <Briefcase className="w-6 h-6 text-primary" />
+              <span className="font-bold text-lg">UtopiaHire</span>
+            </Link>
+
+            {/* Navigation Links */}
+            <div className="flex items-center gap-6">
+              <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                Jobs
+              </Link>
+              {userRole === "seeker" && (
+                <>
+                  <Link to="/job-matcher" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    Job Matcher
+                  </Link>
+                  <Link to="/cv-review" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    CV Review
+                  </Link>
+                  <Link to="/ai-interview" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    AI Interview
+                  </Link>
+                </>
+              )}
             </div>
-          </Link>
 
-          {/* Navigation Links */}
-          <div className="flex items-center gap-8">
-            <Link to="/jobs" className="text-base text-background/90 hover:text-background transition-colors font-medium">
-              Jobs
-            </Link>
-            <Link to="/job-matcher" className="text-base text-background/90 hover:text-background transition-colors font-medium">
-              Matcher
-            </Link>
-            {userRole === "seeker" && (
-              <>
-                <Link to="/cv-review" className="text-base text-background/90 hover:text-background transition-colors font-medium">
-                  CV Review
-                </Link>
-                <Link to="/ai-interview" className="text-base text-background/90 hover:text-background transition-colors font-medium">
-                  Interview
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* User Section */}
-          <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                <Link to="/profile-settings" className="text-base text-background/90 hover:text-background transition-colors font-medium">
-                  Settings
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="px-6 py-2 rounded-full bg-background text-foreground text-base font-medium hover:bg-background/90 transition-colors"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => navigate("/auth")}
-                className="px-6 py-2 rounded-full bg-background text-foreground text-base font-medium hover:bg-background/90 transition-colors"
-              >
-                Sign In
-              </button>
-            )}
+            {/* User Section */}
+            <div className="flex items-center gap-3">
+              <Link to="/profile-settings">
+                <Button variant="ghost" size="sm">
+                  Profile
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Mobile Navbar */}
-      <nav className="fixed top-4 left-4 right-4 z-50 md:hidden">
-        <div className="bg-foreground/60 backdrop-blur-xl rounded-full shadow-2xl px-5 py-3.5 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-background">
-            <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-foreground" />
-            </div>
-          </Link>
+      <nav className="fixed top-0 left-0 right-0 z-50 md:hidden border-b border-border/40 bg-background/95 backdrop-blur-lg">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center gap-2 text-foreground">
+              <Briefcase className="w-5 h-5 text-primary" />
+              <span className="font-bold">UtopiaHire</span>
+            </Link>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="text-background hover:text-background/80 transition-colors"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-foreground hover:text-primary transition-colors"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
 
-        {/* Mobile Dropdown Menu */}
-        {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-foreground/95 backdrop-blur-md rounded-3xl shadow-2xl p-4">
-            <div className="flex flex-col gap-3">
-              {user ? (
-                <>
-                  <Link
-                    to="/jobs"
-                    className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Jobs
-                  </Link>
-                  <Link
-                    to="/job-matcher"
-                    className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Matcher
-                  </Link>
-                  {userRole === "seeker" && (
-                    <>
-                      <Link
-                        to="/dashboard/seeker"
-                        className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        to="/cv-review"
-                        className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        CV Review
-                      </Link>
-                      <Link
-                        to="/ai-interview"
-                        className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Interview
-                      </Link>
-                    </>
-                  )}
-                  {userRole === "company" && (
+          {/* Mobile Dropdown Menu */}
+          {isOpen && (
+            <div className="border-t border-border/40 py-4">
+              <div className="flex flex-col gap-3">
+                <Link
+                  to="/jobs"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Jobs
+                </Link>
+                {userRole === "seeker" && (
+                  <>
                     <Link
-                      to="/dashboard/company"
-                      className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
+                      to="/job-matcher"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
                       onClick={() => setIsOpen(false)}
                     >
-                      Dashboard
+                      Job Matcher
                     </Link>
-                  )}
-                  <Link
-                    to="/profile-settings"
-                    className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Settings
-                  </Link>
-                  <button
+                    <Link
+                      to="/cv-review"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      CV Review
+                    </Link>
+                    <Link
+                      to="/ai-interview"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      AI Interview
+                    </Link>
+                  </>
+                )}
+                <Link
+                  to="/profile-settings"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Profile
+                </Link>
+                <div className="px-4 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
                     onClick={() => {
                       handleSignOut();
                       setIsOpen(false);
                     }}
-                    className="mt-2 px-4 py-2 rounded-full bg-background text-foreground text-sm font-medium hover:bg-background/90 transition-colors"
                   >
                     Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/jobs"
-                    className="text-sm text-background/80 hover:text-background transition-colors font-medium px-4 py-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Jobs
-                  </Link>
-                  <button
-                    onClick={() => {
-                      navigate("/auth");
-                      setIsOpen(false);
-                    }}
-                    className="mt-2 px-4 py-2 rounded-full bg-background text-foreground text-sm font-medium hover:bg-background/90 transition-colors"
-                  >
-                    Sign In
-                  </button>
-                </>
-              )}
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
     </>
   );

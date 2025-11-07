@@ -154,8 +154,8 @@ const JobMatcher = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-6 py-8 pt-24">
+      <div className="min-h-screen bg-background pt-16">
+        <main className="container mx-auto px-6 py-8">
           {!hasCV ? (
             <Card className="p-12 text-center max-w-2xl mx-auto">
               <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />

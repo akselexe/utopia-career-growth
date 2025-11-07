@@ -12,7 +12,7 @@ const CVReview = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/50 pt-24">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/50 pt-16">
         <div className="container mx-auto px-4 py-10">
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Main Upload Component */}

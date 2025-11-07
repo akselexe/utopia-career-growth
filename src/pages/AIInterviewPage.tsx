@@ -14,14 +14,14 @@ const AIInterviewPage = () => {
 
   return (
     <ProtectedRoute requiredUserType="seeker">
-      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-primary/20 via-accent/10 to-background relative overflow-x-hidden pt-16">
         {/* Subtle decorative background like dashboard */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="w-[30vw] h-[30vw] bg-gradient-to-tr from-primary/10 via-accent/8 to-violet-200/8 rounded-full blur-2xl absolute -top-20 -left-20" />
           <div className="w-[18vw] h-[18vw] bg-gradient-to-br from-yellow-200/8 via-amber-200/8 to-violet-200/6 rounded-full blur-xl absolute top-2/3 right-0 opacity-60" />
         </div>
 
-        <div className="container mx-auto px-4 py-12 relative z-10 pt-24">
+        <div className="container mx-auto px-4 py-12 relative z-10">
           <div className="max-w-5xl mx-auto space-y-12">
             {/* Main Interview Component */}
             <AIInterview userId={user!.id} />
