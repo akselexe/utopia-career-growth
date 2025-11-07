@@ -32,7 +32,7 @@ const JobMatcher = () => {
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [hasCV, setHasCV] = useState(false);
   const [aiMatches, setAiMatches] = useState<MatchedJob[]>([]);
-  const [showAiMatches, setShowAiMatches] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ai' | 'all'>('ai');
 
   useEffect(() => {
     if (user) {
@@ -104,7 +104,11 @@ const JobMatcher = () => {
           is_external: false
         })));
 
-        setShowAiMatches(matchedJobsList.length > 0);
+        if (matchedJobsList.length > 0) {
+          setActiveTab('ai');
+        } else {
+          setActiveTab('all');
+        }
       }
 
       // Fetch all active jobs for browsing
@@ -155,240 +159,234 @@ const JobMatcher = () => {
   return (
     <ProtectedRoute requiredUserType="seeker">
       <div className="min-h-screen bg-background pt-16">
-        <main className="container mx-auto px-6 py-8">
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
           {!hasCV ? (
-            <Card className="p-12 text-center max-w-2xl mx-auto">
-              <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-4">Upload Your CV First</h2>
-              <p className="text-muted-foreground mb-6">
-                To get personalized job matches based on your skills and experience, please upload your CV.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Link to="/cv-review">
-                  <Button className="gap-2">
-                    Upload CV
-                  </Button>
-                </Link>
-                <Link to="/jobs">
-                  <Button variant="outline" className="gap-2">
-                    Browse All Jobs
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <Card className="p-8 text-center max-w-md border-dashed">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Get Started</h2>
+                <p className="text-muted-foreground mb-6 text-sm">
+                  Upload your CV to unlock AI-powered job matching
+                </p>
+                <div className="flex flex-col gap-3">
+                  <Link to="/cv-review" className="w-full">
+                    <Button className="w-full">Upload CV</Button>
+                  </Link>
+                  <Link to="/jobs" className="w-full">
+                    <Button variant="outline" className="w-full">Browse Jobs</Button>
+                  </Link>
+                </div>
+              </Card>
+            </div>
           ) : (
             <div className="space-y-6">
-              {/* AI Matches Section */}
-              {showAiMatches && aiMatches.length > 0 && (
-                <div className="space-y-4">
-                  <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-bold">AI-Powered Matches</h2>
-                      <Badge variant="secondary" className="ml-auto">
-                        {aiMatches.length} High-Quality Matches
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      These jobs have been analyzed and scored based on your CV, skills, and experience.
-                    </p>
-                  </Card>
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold mb-1">Job Matches</h1>
+                  <p className="text-muted-foreground">
+                    {aiMatches.length > 0 
+                      ? `${aiMatches.length} AI-powered matches found`
+                      : `${matchedJobs.length} opportunities available`
+                    }
+                  </p>
+                </div>
+                {userLocation && (
+                  <Link to="/profile-settings">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <MapPin className="w-4 h-4" />
+                      {userLocation}
+                    </Button>
+                  </Link>
+                )}
+              </div>
 
+              {/* Tabs */}
+              {aiMatches.length > 0 && (
+                <div className="flex gap-2 border-b">
+                  <button
+                    onClick={() => setActiveTab('ai')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                      activeTab === 'ai'
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    AI Matches
+                    <Badge variant="secondary" className="ml-2">
+                      {aiMatches.length}
+                    </Badge>
+                    {activeTab === 'ai' && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('all')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                      activeTab === 'all'
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    All Jobs
+                    <Badge variant="secondary" className="ml-2">
+                      {matchedJobs.length}
+                    </Badge>
+                    {activeTab === 'all' && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* AI Matches */}
+              {activeTab === 'ai' && aiMatches.length > 0 && (
+                <div className="grid gap-4">
                   {aiMatches.map((match) => (
-                    <Card key={match.job_id} className="p-6 hover:shadow-lg transition-all border-l-4 border-l-primary">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-semibold">{match.job_title}</h3>
+                    <Card key={match.job_id} className="p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xl font-semibold truncate">{match.job_title}</h3>
                             {match.is_external && (
-                              <Badge variant="outline" className="gap-1">
+                              <Badge variant="outline" className="gap-1 shrink-0">
                                 <ExternalLink className="w-3 h-3" />
                                 External
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
                             {match.job_location}
                           </p>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Badge className="text-lg px-3 py-1">
-                            <Target className="w-4 h-4 mr-1" />
-                            {match.match_score}% Match
-                          </Badge>
-                        </div>
+                        <Badge className="text-base px-3 py-1.5 shrink-0 bg-primary/10 text-primary border-primary/20">
+                          {match.match_score}% Match
+                        </Badge>
                       </div>
 
-                      <div className="space-y-4">
-                        {match.recommendation && (
-                          <div className="p-3 bg-primary/5 rounded-lg">
-                            <p className="text-sm font-medium mb-1">AI Recommendation:</p>
-                            <p className="text-sm text-muted-foreground">{match.recommendation}</p>
-                          </div>
-                        )}
+                      {match.recommendation && (
+                        <p className="text-sm text-muted-foreground mb-4 p-3 bg-muted/50 rounded-lg">
+                          {match.recommendation}
+                        </p>
+                      )}
 
-                        {match.matching_skills.length > 0 && (
-                          <div>
-                            <p className="text-sm font-semibold mb-2 flex items-center gap-1">
-                              <TrendingUp className="w-4 h-4 text-green-600" />
-                              Matching Skills
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {match.matching_skills.map((skill) => (
-                                <Badge key={skill} variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {match.missing_skills.length > 0 && (
-                          <div>
-                            <p className="text-sm font-semibold mb-2 text-muted-foreground">
-                              Skills to Develop
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {match.missing_skills.slice(0, 5).map((skill) => (
-                                <Badge key={skill} variant="outline" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex gap-2 pt-2">
-                          {match.is_external && match.external_url ? (
-                            <a href={match.external_url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                              <Button className="w-full gap-2">
-                                Apply Now
-                                <ExternalLink className="w-4 h-4" />
-                              </Button>
-                            </a>
-                          ) : (
-                            <Link to="/jobs" className="flex-1">
-                              <Button className="w-full">View Details</Button>
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-
-                  <div className="flex justify-center">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowAiMatches(false)}
-                    >
-                      View All Jobs
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Location info */}
-              {!showAiMatches && userLocation && (
-                <Card className="p-4 bg-primary/5">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span>Showing jobs relevant to <strong>{userLocation}</strong></span>
-                    <Link to="/profile-settings" className="ml-auto text-primary hover:underline text-xs">
-                      Update location
-                    </Link>
-                  </div>
-                </Card>
-              )}
-
-              {/* Job listings */}
-              {!showAiMatches && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">
-                    {matchedJobs.length} {userLocation ? 'Regional' : ''} Opportunities
-                  </h2>
-                  <Link to="/jobs">
-                    <Button variant="outline" size="sm">View All Jobs</Button>
-                  </Link>
-                </div>
-
-                {matchedJobs.length === 0 ? (
-                  <Card className="p-12 text-center">
-                    <Briefcase className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-                    <p className="text-muted-foreground">No jobs available at the moment.</p>
-                  </Card>
-                ) : (
-                  matchedJobs.map((job) => (
-                    <Card key={job.id} className="p-6 hover:shadow-lg transition-shadow">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold mb-1">{job.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            UtopiaHire
+                      {match.matching_skills.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wide">
+                            Your Skills
                           </p>
-                        </div>
-                        {job.location?.toLowerCase().includes(userLocation?.toLowerCase() || '') && (
-                          <Badge variant="secondary" className="gap-1">
-                            <MapPin className="w-3 h-3" />
-                            Local
-                          </Badge>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-                        {job.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {job.location}
+                          <div className="flex flex-wrap gap-2">
+                            {match.matching_skills.map((skill) => (
+                              <Badge key={skill} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
                           </div>
-                        )}
-                        {job.job_type && (
-                          <div className="flex items-center gap-1">
-                            <Briefcase className="w-4 h-4" />
-                            {job.job_type}
-                          </div>
-                        )}
-                        {(job.salary_min || job.salary_max) && (
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="w-4 h-4" />
-                            {job.salary_min && job.salary_max 
-                              ? `${job.currency || 'USD'} ${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}`
-                              : job.salary_min 
-                              ? `From ${job.currency || 'USD'} ${job.salary_min.toLocaleString()}`
-                              : `Up to ${job.currency || 'USD'} ${job.salary_max.toLocaleString()}`
-                            }
-                          </div>
-                        )}
-                      </div>
-
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {job.description}
-                      </p>
-
-                      {job.skills_required && job.skills_required.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {job.skills_required.slice(0, 5).map((skill: string) => (
-                            <Badge key={skill} variant="outline" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {job.skills_required.length > 5 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{job.skills_required.length - 5} more
-                            </Badge>
-                          )}
                         </div>
                       )}
 
                       <div className="flex gap-2">
-                        <Link to={`/jobs`} className="flex-1">
-                          <Button className="w-full">View Details</Button>
-                        </Link>
+                        {match.is_external && match.external_url ? (
+                          <a href={match.external_url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                            <Button className="w-full gap-2">
+                              Apply Now
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </a>
+                        ) : (
+                          <Link to="/jobs" className="flex-1">
+                            <Button className="w-full">View Details</Button>
+                          </Link>
+                        )}
                       </div>
                     </Card>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
+
+              {/* All Jobs */}
+              {activeTab === 'all' && (
+                <div className="grid gap-4">
+                  {matchedJobs.length === 0 ? (
+                    <Card className="p-12 text-center">
+                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-muted-foreground">No jobs available at the moment</p>
+                    </Card>
+                  ) : (
+                    matchedJobs.map((job) => (
+                      <Card key={job.id} className="p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold mb-1 truncate">{job.title}</h3>
+                            <p className="text-sm text-muted-foreground">UtopiaHire</p>
+                          </div>
+                          {job.location?.toLowerCase().includes(userLocation?.toLowerCase() || '') && (
+                            <Badge variant="secondary" className="gap-1 shrink-0">
+                              <MapPin className="w-3 h-3" />
+                              Local
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-4">
+                          {job.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5" />
+                              {job.location}
+                            </span>
+                          )}
+                          {job.job_type && (
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="w-3.5 h-3.5" />
+                              {job.job_type}
+                            </span>
+                          )}
+                          {(job.salary_min || job.salary_max) && (
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-3.5 h-3.5" />
+                              {job.salary_min && job.salary_max 
+                                ? `${job.currency || 'USD'} ${job.salary_min.toLocaleString()}-${job.salary_max.toLocaleString()}`
+                                : job.salary_min 
+                                ? `From ${job.currency || 'USD'} ${job.salary_min.toLocaleString()}`
+                                : `Up to ${job.currency || 'USD'} ${job.salary_max.toLocaleString()}`
+                              }
+                            </span>
+                          )}
+                        </div>
+
+                        {job.description && (
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                            {job.description}
+                          </p>
+                        )}
+
+                        {job.skills_required && job.skills_required.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {job.skills_required.slice(0, 6).map((skill: string) => (
+                              <Badge key={skill} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {job.skills_required.length > 6 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{job.skills_required.length - 6}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        <Link to="/jobs">
+                          <Button className="w-full" variant="outline">View Details</Button>
+                        </Link>
+                      </Card>
+                    ))
+                  )}
+                </div>
               )}
             </div>
           )}
