@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Loader2, FileText, CheckCircle2, XCircle, Sparkles, Download, Copy } from "lucide-react";
+import { Upload, Loader2, FileText, CheckCircle2, XCircle, Sparkles, Download, Copy, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from 'pdfjs-dist';
@@ -120,6 +120,105 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   const [targetRole, setTargetRole] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("modern");
+
+  // Add/Remove handlers for dynamic sections
+  const addExperience = () => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      experience: [
+        ...resumeData.experience,
+        {
+          title: '',
+          company: '',
+          location: '',
+          dates: '',
+          achievements: ['']
+        }
+      ]
+    });
+  };
+
+  const removeExperience = (index: number) => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      experience: resumeData.experience.filter((_, i) => i !== index)
+    });
+  };
+
+  const addEducation = () => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      education: [
+        ...resumeData.education,
+        {
+          degree: '',
+          school: '',
+          location: '',
+          dates: '',
+          details: ''
+        }
+      ]
+    });
+  };
+
+  const removeEducation = (index: number) => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      education: resumeData.education.filter((_, i) => i !== index)
+    });
+  };
+
+  const addProject = () => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      projects: [
+        ...(resumeData.projects || []),
+        {
+          name: '',
+          description: '',
+          technologies: [],
+          achievements: [],
+          link: ''
+        }
+      ]
+    });
+  };
+
+  const removeProject = (index: number) => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      projects: resumeData.projects?.filter((_, i) => i !== index)
+    });
+  };
+
+  const addCertification = () => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      certifications: [
+        ...(resumeData.certifications || []),
+        {
+          name: '',
+          issuer: '',
+          date: ''
+        }
+      ]
+    });
+  };
+
+  const removeCertification = (index: number) => {
+    if (!resumeData) return;
+    setResumeData({
+      ...resumeData,
+      certifications: resumeData.certifications?.filter((_, i) => i !== index)
+    });
+  };
 
   // Set up PDF.js worker using Vite's URL import
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -925,10 +1024,30 @@ export const CVUpload = ({ userId }: { userId: string }) => {
 
               {/* Experience */}
               <div>
-                <Label className="text-sm font-semibold mb-3 block">Professional Experience</Label>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-sm font-semibold">Professional Experience</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addExperience}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Experience
+                  </Button>
+                </div>
                 <div className="space-y-4">
                   {resumeData.experience.map((job, idx) => (
-                    <div key={idx} className="p-4 border rounded-lg space-y-3">
+                    <div key={idx} className="p-4 border rounded-lg space-y-3 relative">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeExperience(idx)}
+                        className="absolute top-2 right-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">Job Title</Label>
@@ -999,10 +1118,30 @@ export const CVUpload = ({ userId }: { userId: string }) => {
 
               {/* Education */}
               <div>
-                <Label className="text-sm font-semibold mb-3 block">Education</Label>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-sm font-semibold">Education</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addEducation}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Education
+                  </Button>
+                </div>
                 <div className="space-y-4">
                   {resumeData.education.map((edu, idx) => (
-                    <div key={idx} className="p-4 border rounded-lg space-y-3">
+                    <div key={idx} className="p-4 border rounded-lg space-y-3 relative">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEducation(idx)}
+                        className="absolute top-2 right-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">Degree</Label>
@@ -1061,10 +1200,30 @@ export const CVUpload = ({ userId }: { userId: string }) => {
               {/* Projects */}
               {resumeData.projects && resumeData.projects.length > 0 && (
                 <div>
-                  <Label className="text-sm font-semibold mb-3 block">Projects</Label>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm font-semibold">Projects</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addProject}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Project
+                    </Button>
+                  </div>
                   <div className="space-y-4">
                     {resumeData.projects.map((project, idx) => (
-                      <div key={idx} className="p-4 border rounded-lg space-y-3">
+                      <div key={idx} className="p-4 border rounded-lg space-y-3 relative">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeProject(idx)}
+                          className="absolute top-2 right-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <Label className="text-xs">Project Name</Label>
@@ -1119,6 +1278,22 @@ export const CVUpload = ({ userId }: { userId: string }) => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Add Projects Section if it doesn't exist */}
+              {(!resumeData.projects || resumeData.projects.length === 0) && (
+                <div className="p-4 border-2 border-dashed rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground mb-3">No projects added yet</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addProject}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add First Project
+                  </Button>
                 </div>
               )}
 
@@ -1177,10 +1352,30 @@ export const CVUpload = ({ userId }: { userId: string }) => {
               {/* Certifications */}
               {resumeData.certifications && resumeData.certifications.length > 0 && (
                 <div>
-                  <Label className="text-sm font-semibold mb-3 block">Certifications</Label>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm font-semibold">Certifications</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCertification}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Certification
+                    </Button>
+                  </div>
                   <div className="space-y-4">
                     {resumeData.certifications.map((cert, idx) => (
-                      <div key={idx} className="p-4 border rounded-lg space-y-3">
+                      <div key={idx} className="p-4 border rounded-lg space-y-3 relative">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeCertification(idx)}
+                          className="absolute top-2 right-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <Label className="text-xs">Certification Name</Label>
@@ -1222,6 +1417,22 @@ export const CVUpload = ({ userId }: { userId: string }) => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Add Certifications Section if it doesn't exist */}
+              {(!resumeData.certifications || resumeData.certifications.length === 0) && (
+                <div className="p-4 border-2 border-dashed rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground mb-3">No certifications added yet</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCertification}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add First Certification
+                  </Button>
                 </div>
               )}
             </div>
