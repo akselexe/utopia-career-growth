@@ -22,10 +22,10 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-background to-muted/10">
+      <section className="relative overflow-hidden bg-gradient-to-b from-background to-muted/10 min-h-screen flex items-center">
         <AnimatedBackground />
         
-        <div className="container mx-auto px-4 py-20 md:py-32 relative">
+        <div className="container mx-auto px-4 py-20 md:py-32 relative w-full">
           <div className="max-w-5xl mx-auto text-center space-y-8">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary/20 bg-background text-primary text-sm font-semibold">
