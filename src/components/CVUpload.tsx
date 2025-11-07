@@ -863,60 +863,364 @@ export const CVUpload = ({ userId }: { userId: string }) => {
             </div>
           </div>
 
-          <div className="bg-muted/50 rounded-lg p-6 space-y-6">
-            {/* Preview of the resume data */}
-            <div className="space-y-4">
-              <div className="text-center border-b pb-4">
-                <h2 className="text-2xl font-bold text-primary">{resumeData.name}</h2>
-                <div className="text-sm text-muted-foreground mt-2 space-x-2">
-                  {resumeData.contact.email && <span>{resumeData.contact.email}</span>}
-                  {resumeData.contact.phone && <span>• {resumeData.contact.phone}</span>}
-                  {resumeData.contact.location && <span>• {resumeData.contact.location}</span>}
+          <div className="bg-muted/50 rounded-lg p-6 space-y-6 max-h-[600px] overflow-y-auto">
+            {/* Editable Resume Form */}
+            <div className="space-y-6">
+              {/* Name and Contact */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-semibold">Full Name</Label>
+                  <Input
+                    value={resumeData.name}
+                    onChange={(e) => setResumeData({ ...resumeData, name: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Email</Label>
+                    <Input
+                      value={resumeData.contact.email || ''}
+                      onChange={(e) => setResumeData({ ...resumeData, contact: { ...resumeData.contact, email: e.target.value }})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Phone</Label>
+                    <Input
+                      value={resumeData.contact.phone || ''}
+                      onChange={(e) => setResumeData({ ...resumeData, contact: { ...resumeData.contact, phone: e.target.value }})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Location</Label>
+                    <Input
+                      value={resumeData.contact.location || ''}
+                      onChange={(e) => setResumeData({ ...resumeData, contact: { ...resumeData.contact, location: e.target.value }})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">LinkedIn</Label>
+                    <Input
+                      value={resumeData.contact.linkedin || ''}
+                      onChange={(e) => setResumeData({ ...resumeData, contact: { ...resumeData.contact, linkedin: e.target.value }})}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {resumeData.summary && (
-                <div>
-                  <h3 className="font-bold text-primary mb-2">PROFESSIONAL SUMMARY</h3>
-                  <p className="text-sm">{resumeData.summary}</p>
-                </div>
-              )}
+              {/* Professional Summary */}
+              <div>
+                <Label className="text-sm font-semibold">Professional Summary</Label>
+                <Textarea
+                  value={resumeData.summary}
+                  onChange={(e) => setResumeData({ ...resumeData, summary: e.target.value })}
+                  rows={4}
+                  className="mt-1"
+                />
+              </div>
 
-              {resumeData.experience && resumeData.experience.length > 0 && (
-                <div>
-                  <h3 className="font-bold text-primary mb-2">EXPERIENCE</h3>
-                  {resumeData.experience.slice(0, 2).map((job, idx) => (
-                    <div key={idx} className="mb-3">
-                      <div className="flex justify-between">
-                        <p className="font-semibold text-sm">{job.title}</p>
-                        <p className="text-xs text-muted-foreground">{job.dates}</p>
+              {/* Experience */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block">Professional Experience</Label>
+                <div className="space-y-4">
+                  {resumeData.experience.map((job, idx) => (
+                    <div key={idx} className="p-4 border rounded-lg space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Job Title</Label>
+                          <Input
+                            value={job.title}
+                            onChange={(e) => {
+                              const newExp = [...resumeData.experience];
+                              newExp[idx].title = e.target.value;
+                              setResumeData({ ...resumeData, experience: newExp });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Company</Label>
+                          <Input
+                            value={job.company}
+                            onChange={(e) => {
+                              const newExp = [...resumeData.experience];
+                              newExp[idx].company = e.target.value;
+                              setResumeData({ ...resumeData, experience: newExp });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Dates</Label>
+                          <Input
+                            value={job.dates}
+                            onChange={(e) => {
+                              const newExp = [...resumeData.experience];
+                              newExp[idx].dates = e.target.value;
+                              setResumeData({ ...resumeData, experience: newExp });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Location</Label>
+                          <Input
+                            value={job.location || ''}
+                            onChange={(e) => {
+                              const newExp = [...resumeData.experience];
+                              newExp[idx].location = e.target.value;
+                              setResumeData({ ...resumeData, experience: newExp });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground italic">{job.company}</p>
-                      <ul className="text-xs mt-1 space-y-1">
-                        {job.achievements.slice(0, 2).map((ach, i) => (
-                          <li key={i}>• {ach}</li>
-                        ))}
-                      </ul>
+                      <div>
+                        <Label className="text-xs">Achievements (one per line)</Label>
+                        <Textarea
+                          value={job.achievements.join('\n')}
+                          onChange={(e) => {
+                            const newExp = [...resumeData.experience];
+                            newExp[idx].achievements = e.target.value.split('\n').filter(a => a.trim());
+                            setResumeData({ ...resumeData, experience: newExp });
+                          }}
+                          rows={4}
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
                   ))}
-                  {resumeData.experience.length > 2 && (
-                    <p className="text-xs text-muted-foreground italic">
-                      + {resumeData.experience.length - 2} more positions...
-                    </p>
-                  )}
+                </div>
+              </div>
+
+              {/* Education */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block">Education</Label>
+                <div className="space-y-4">
+                  {resumeData.education.map((edu, idx) => (
+                    <div key={idx} className="p-4 border rounded-lg space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Degree</Label>
+                          <Input
+                            value={edu.degree}
+                            onChange={(e) => {
+                              const newEdu = [...resumeData.education];
+                              newEdu[idx].degree = e.target.value;
+                              setResumeData({ ...resumeData, education: newEdu });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">School</Label>
+                          <Input
+                            value={edu.school}
+                            onChange={(e) => {
+                              const newEdu = [...resumeData.education];
+                              newEdu[idx].school = e.target.value;
+                              setResumeData({ ...resumeData, education: newEdu });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Dates</Label>
+                          <Input
+                            value={edu.dates}
+                            onChange={(e) => {
+                              const newEdu = [...resumeData.education];
+                              newEdu[idx].dates = e.target.value;
+                              setResumeData({ ...resumeData, education: newEdu });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Location</Label>
+                          <Input
+                            value={edu.location || ''}
+                            onChange={(e) => {
+                              const newEdu = [...resumeData.education];
+                              newEdu[idx].location = e.target.value;
+                              setResumeData({ ...resumeData, education: newEdu });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Projects */}
+              {resumeData.projects && resumeData.projects.length > 0 && (
+                <div>
+                  <Label className="text-sm font-semibold mb-3 block">Projects</Label>
+                  <div className="space-y-4">
+                    {resumeData.projects.map((project, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Project Name</Label>
+                            <Input
+                              value={project.name}
+                              onChange={(e) => {
+                                const newProj = [...(resumeData.projects || [])];
+                                newProj[idx].name = e.target.value;
+                                setResumeData({ ...resumeData, projects: newProj });
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Link (optional)</Label>
+                            <Input
+                              value={project.link || ''}
+                              onChange={(e) => {
+                                const newProj = [...(resumeData.projects || [])];
+                                newProj[idx].link = e.target.value;
+                                setResumeData({ ...resumeData, projects: newProj });
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Description</Label>
+                          <Textarea
+                            value={project.description || ''}
+                            onChange={(e) => {
+                              const newProj = [...(resumeData.projects || [])];
+                              newProj[idx].description = e.target.value;
+                              setResumeData({ ...resumeData, projects: newProj });
+                            }}
+                            rows={2}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Technologies (comma-separated)</Label>
+                          <Input
+                            value={project.technologies?.join(', ') || ''}
+                            onChange={(e) => {
+                              const newProj = [...(resumeData.projects || [])];
+                              newProj[idx].technologies = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+                              setResumeData({ ...resumeData, projects: newProj });
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {resumeData.skills && (
+              {/* Skills */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block">Skills</Label>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Technical Skills (comma-separated)</Label>
+                    <Textarea
+                      value={resumeData.skills.technical?.join(', ') || ''}
+                      onChange={(e) => setResumeData({ 
+                        ...resumeData, 
+                        skills: { 
+                          ...resumeData.skills, 
+                          technical: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                        }
+                      })}
+                      rows={2}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Tools (comma-separated)</Label>
+                    <Textarea
+                      value={resumeData.skills.tools?.join(', ') || ''}
+                      onChange={(e) => setResumeData({ 
+                        ...resumeData, 
+                        skills: { 
+                          ...resumeData.skills, 
+                          tools: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                        }
+                      })}
+                      rows={2}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Languages (comma-separated)</Label>
+                    <Textarea
+                      value={resumeData.skills.languages?.join(', ') || ''}
+                      onChange={(e) => setResumeData({ 
+                        ...resumeData, 
+                        skills: { 
+                          ...resumeData.skills, 
+                          languages: e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                        }
+                      })}
+                      rows={2}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Certifications */}
+              {resumeData.certifications && resumeData.certifications.length > 0 && (
                 <div>
-                  <h3 className="font-bold text-primary mb-2">SKILLS</h3>
-                  <div className="text-xs space-y-1">
-                    {resumeData.skills.technical && (
-                      <p><span className="font-semibold">Technical:</span> {resumeData.skills.technical.join(', ')}</p>
-                    )}
-                    {resumeData.skills.tools && (
-                      <p><span className="font-semibold">Tools:</span> {resumeData.skills.tools.join(', ')}</p>
-                    )}
+                  <Label className="text-sm font-semibold mb-3 block">Certifications</Label>
+                  <div className="space-y-4">
+                    {resumeData.certifications.map((cert, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Certification Name</Label>
+                            <Input
+                              value={cert.name}
+                              onChange={(e) => {
+                                const newCert = [...(resumeData.certifications || [])];
+                                newCert[idx].name = e.target.value;
+                                setResumeData({ ...resumeData, certifications: newCert });
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Issuer</Label>
+                            <Input
+                              value={cert.issuer || ''}
+                              onChange={(e) => {
+                                const newCert = [...(resumeData.certifications || [])];
+                                newCert[idx].issuer = e.target.value;
+                                setResumeData({ ...resumeData, certifications: newCert });
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Date</Label>
+                            <Input
+                              value={cert.date || ''}
+                              onChange={(e) => {
+                                const newCert = [...(resumeData.certifications || [])];
+                                newCert[idx].date = e.target.value;
+                                setResumeData({ ...resumeData, certifications: newCert });
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
