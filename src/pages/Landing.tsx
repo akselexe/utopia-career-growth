@@ -39,7 +39,7 @@ const Landing = () => {
             
             {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              Your Path to{" "}
+              <span className="text-white">Your Path to</span>{" "}
               <span className="gradient-text">
                 Career Success
               </span>
@@ -47,9 +47,8 @@ const Landing = () => {
             
             {/* Subheading */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              UtopiaHire connects talent with opportunity through ethical AI. 
-              We help job seekers in Sub-Saharan Africa and MENA optimize resumes, 
-              prepare for interviews, and discover meaningful opportunities.
+              We're building a better job market for Africa and the Middle East. Get your resume reviewed, 
+              practice interviews, and find jobs that match your skills—all in one place.
             </p>
             
             {/* CTA Buttons */}
@@ -66,22 +65,6 @@ const Landing = () => {
                   <Briefcase className="w-5 h-5" />
                 </Button>
               </Link>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center gap-8 pt-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
-                <span>Ethical AI</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-accent" />
-                <span>Instant Feedback</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-primary" />
-                <span>Fair & Inclusive</span>
-              </div>
             </div>
           </div>
         </div>
