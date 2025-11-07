@@ -41,7 +41,7 @@ const CVReview = () => {
         <div className="container mx-auto px-4 py-10">
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Main Upload Component */}
-            <CVUpload userId={user!.id} />
+            {user && <CVUpload userId={user.id} />}
             
             {/* Best Practices */}
             <Card className="p-8 bg-white border border-slate-200 shadow-lg rounded-xl">
