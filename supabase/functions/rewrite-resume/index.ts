@@ -76,6 +76,18 @@ IMPORTANT: Return ONLY valid JSON with this exact structure:
       ]
     }
   ],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "Brief project description",
+      "technologies": ["Tech 1", "Tech 2"],
+      "achievements": [
+        "Key achievement or result",
+        "Another accomplishment"
+      ],
+      "link": "github.com/project or demo.com"
+    }
+  ],
   "education": [
     {
       "degree": "Degree Name",
@@ -89,13 +101,29 @@ IMPORTANT: Return ONLY valid JSON with this exact structure:
     "technical": ["Skill 1", "Skill 2"],
     "tools": ["Tool 1", "Tool 2"],
     "languages": ["Language 1", "Language 2"]
-  }
+  },
+  "certifications": [
+    {
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "Month Year"
+    }
+  ]
 }
+
+CRITICAL: Extract ALL information from the original resume including:
+- All work experience with full details
+- ALL projects with complete descriptions and technologies
+- All certifications and courses
+- All education details
+- All skills mentioned
+- Do NOT omit any section that exists in the original resume
 
 GUIDELINES:
 - Use strong action verbs and quantify achievements
 - Keep bullet points concise (1-2 lines)
 - Maintain factual accuracy from original resume
+- Include ALL projects, certifications, and details from original
 - Optimize for ATS systems
 ${targetRole ? `- Tailor content for: ${targetRole}` : ''}
 ${templateStyle || ''}

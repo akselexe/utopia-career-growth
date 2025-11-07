@@ -38,6 +38,13 @@ interface ResumeData {
     dates: string;
     achievements: string[];
   }>;
+  projects?: Array<{
+    name: string;
+    description?: string;
+    technologies?: string[];
+    achievements?: string[];
+    link?: string;
+  }>;
   education: Array<{
     degree: string;
     school: string;
@@ -50,6 +57,11 @@ interface ResumeData {
     tools?: string[];
     languages?: string[];
   };
+  certifications?: Array<{
+    name: string;
+    issuer?: string;
+    date?: string;
+  }>;
 }
 
 interface ResumeTemplate {
@@ -472,6 +484,100 @@ export const CVUpload = ({ userId }: { userId: string }) => {
           y += detailLines.length * 4;
         }
         y += 3;
+      });
+      y += 2;
+    }
+
+    // PROJECTS
+    if (resumeData.projects && resumeData.projects.length > 0) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("PROJECTS", margin, y);
+      y += 6;
+
+      resumeData.projects.forEach((project) => {
+        checkNewPage(20);
+        
+        // Project name and link
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(50, 50, 50);
+        doc.text(project.name, margin, y);
+        if (project.link) {
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(41, 128, 185);
+          doc.text(project.link, pageWidth - margin, y, { align: 'right' });
+        }
+        y += 5;
+
+        // Description
+        if (project.description) {
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(80, 80, 80);
+          const descLines = doc.splitTextToSize(project.description, pageWidth - (margin * 2));
+          doc.text(descLines, margin, y);
+          y += descLines.length * 4 + 2;
+        }
+
+        // Technologies
+        if (project.technologies && project.technologies.length > 0) {
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(100, 100, 100);
+          const techText = "Technologies: " + project.technologies.join(', ');
+          const techLines = doc.splitTextToSize(techText, pageWidth - (margin * 2));
+          doc.text(techLines, margin, y);
+          y += techLines.length * 3.5 + 2;
+        }
+
+        // Achievements
+        if (project.achievements && project.achievements.length > 0) {
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(50, 50, 50);
+          project.achievements.forEach((achievement) => {
+            checkNewPage(10);
+            const achLines = doc.splitTextToSize(`• ${achievement}`, pageWidth - margin - 20);
+            doc.text(achLines, margin + 5, y);
+            y += achLines.length * 4 + 1;
+          });
+        }
+        y += 3;
+      });
+      y += 2;
+    }
+
+    // CERTIFICATIONS
+    if (resumeData.certifications && resumeData.certifications.length > 0) {
+      checkNewPage(15);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 78, 120);
+      doc.text("CERTIFICATIONS", margin, y);
+      y += 6;
+
+      resumeData.certifications.forEach((cert) => {
+        checkNewPage(10);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(50, 50, 50);
+        doc.text(cert.name, margin, y);
+        
+        if (cert.date) {
+          doc.setFont("helvetica", "normal");
+          doc.text(cert.date, pageWidth - margin, y, { align: 'right' });
+        }
+        y += 5;
+
+        if (cert.issuer) {
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(80, 80, 80);
+          doc.text(cert.issuer, margin, y);
+          y += 4;
+        }
+        y += 2;
       });
       y += 2;
     }
