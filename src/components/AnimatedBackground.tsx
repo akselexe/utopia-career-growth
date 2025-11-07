@@ -26,7 +26,7 @@ export const AnimatedBackground = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none bg-background">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none bg-black">
       {/* Stars */}
       {stars.map((star) => (
         <div
