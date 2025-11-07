@@ -31,13 +31,13 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { cvText, analysis, targetRole } = await req.json();
+    const { cvText, analysis, targetRole, templateStyle } = await req.json();
 
     if (!cvText) {
       throw new Error('No CV text provided');
     }
 
-    console.log('Rewriting resume for user:', user.id);
+    console.log('Rewriting resume for user:', user.id, 'with template style:', templateStyle ? 'custom' : 'default');
 
     // Call Lovable AI to rewrite the resume
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -63,6 +63,9 @@ IMPORTANT INSTRUCTIONS:
 7. Improve formatting and structure
 ${targetRole ? `8. Tailor the content for the role: ${targetRole}` : ''}
 
+TEMPLATE STYLE:
+${templateStyle || 'Use a modern, professional format with clear sections and strong action verbs.'}
+
 Return the rewritten resume in a clear, professional format with proper sections:
 - Contact Information
 - Professional Summary
@@ -71,7 +74,7 @@ Return the rewritten resume in a clear, professional format with proper sections
 - Skills
 - Additional sections as appropriate
 
-Use markdown formatting for structure.`
+Use markdown formatting for structure. Follow the template style guidance closely.`
           },
           {
             role: 'user',

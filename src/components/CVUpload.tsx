@@ -20,6 +20,52 @@ interface CVAnalysis {
   formatting_feedback: string;
 }
 
+interface ResumeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  style: string;
+}
+
+const RESUME_TEMPLATES: ResumeTemplate[] = [
+  {
+    id: "modern",
+    name: "Modern Professional",
+    description: "Clean, contemporary design with focus on achievements and metrics",
+    style: "Use a modern, clean format with clear sections. Emphasize quantifiable achievements, use strong action verbs, and maintain a professional yet contemporary tone. Include metrics and numbers where possible."
+  },
+  {
+    id: "executive",
+    name: "Executive Leadership",
+    description: "Strategic focus for senior-level positions with leadership emphasis",
+    style: "Use an executive-level format highlighting strategic impact, leadership experience, and business outcomes. Emphasize C-suite language, board-level achievements, and transformational results. Focus on ROI and organizational impact."
+  },
+  {
+    id: "technical",
+    name: "Technical/Engineering",
+    description: "Optimized for developers, engineers, and technical roles",
+    style: "Use a technical format with clear skill categorization, project highlights, and technical stack details. Include GitHub contributions, tech stack proficiency, and technical problem-solving achievements. Use industry-standard terminology."
+  },
+  {
+    id: "creative",
+    name: "Creative Professional",
+    description: "Engaging format for design, marketing, and creative industries",
+    style: "Use a creative yet professional format that showcases portfolio highlights and creative achievements. Balance creativity with readability. Emphasize projects, campaigns, and creative impact while maintaining professional structure."
+  },
+  {
+    id: "ats",
+    name: "ATS-Optimized",
+    description: "Maximum compatibility with Applicant Tracking Systems",
+    style: "Use a simple, ATS-friendly format with standard section headers (Work Experience, Education, Skills). Avoid tables, graphics, or complex formatting. Use keywords from job descriptions, clear dates, and straightforward bullet points."
+  },
+  {
+    id: "academic",
+    name: "Academic/Research",
+    description: "Detailed format for research, academia, and scientific positions",
+    style: "Use an academic CV format with detailed sections for publications, research, grants, and teaching. Include methodologies, research impact, citations, and academic achievements. Maintain formal academic tone."
+  }
+];
+
 export const CVUpload = ({ userId }: { userId: string }) => {
   const { toast } = useToast();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -29,6 +75,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [isRewriting, setIsRewriting] = useState(false);
   const [rewrittenResume, setRewrittenResume] = useState<string>("");
   const [targetRole, setTargetRole] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("modern");
 
   // Set up PDF.js worker using Vite's URL import
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -195,11 +242,14 @@ export const CVUpload = ({ userId }: { userId: string }) => {
     setRewrittenResume("");
 
     try {
+      const template = RESUME_TEMPLATES.find(t => t.id === selectedTemplate);
+      
       const { data: rewriteData, error: rewriteError } = await supabase.functions.invoke('rewrite-resume', {
         body: { 
           cvText: cvText.substring(0, 4000),
           analysis: analysis,
-          targetRole: targetRole || undefined
+          targetRole: targetRole || undefined,
+          templateStyle: template?.style
         },
       });
 
@@ -386,12 +436,46 @@ export const CVUpload = ({ userId }: { userId: string }) => {
                   AI Resume Rewriter
                 </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Get a professionally rewritten version optimized for ATS and impact
+                  Choose a template and get a professionally rewritten version
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Template Selection */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">
+                  Choose Resume Template
+                </Label>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {RESUME_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      disabled={isRewriting}
+                      className={`text-left p-4 rounded-lg border-2 transition-all ${
+                        selectedTemplate === template.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50 bg-background'
+                      } ${isRewriting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                          selectedTemplate === template.id ? 'bg-primary' : 'bg-muted-foreground'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm">{template.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {template.description}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Target Role Input */}
               <div>
                 <Label htmlFor="target-role" className="text-sm">
                   Target Role (Optional)
@@ -416,12 +500,12 @@ export const CVUpload = ({ userId }: { userId: string }) => {
                 {isRewriting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Rewriting...
+                    Rewriting with {RESUME_TEMPLATES.find(t => t.id === selectedTemplate)?.name}...
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Rewrite My Resume
+                    Rewrite with {RESUME_TEMPLATES.find(t => t.id === selectedTemplate)?.name} Template
                   </>
                 )}
               </Button>
