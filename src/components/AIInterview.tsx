@@ -654,9 +654,22 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const streamChat = async (currentMessages: Message[]) => {
+  const lastRequestTimeRef = useRef<number>(0);
+  const requestCountRef = useRef<number>(0);
+  const REQUEST_INTERVAL = 2000; // 2 seconds between requests
+  const MAX_RETRIES = 3;
+
+  const streamChat = async (currentMessages: Message[], retryCount = 0) => {
     setIsLoading(true);
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/interview-chat`;
+    
+    // Rate limiting check
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    if (timeSinceLastRequest < REQUEST_INTERVAL) {
+      await new Promise(resolve => setTimeout(resolve, REQUEST_INTERVAL - timeSinceLastRequest));
+    }
+    lastRequestTimeRef.current = Date.now();
     
     try {
       // Cancel any ongoing speech
@@ -674,8 +687,32 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       });
 
       if (!resp.ok) {
-        if (resp.status === 429 || resp.status === 402) {
+        if (resp.status === 429) {
+          // Rate limit error - implement retry with exponential backoff
+          if (retryCount < MAX_RETRIES) {
+            const waitTime = Math.pow(2, retryCount) * 3000; // 3s, 6s, 12s
+            toast({
+              title: "Rate Limit Reached",
+              description: `Too many requests. Retrying in ${waitTime / 1000} seconds...`,
+            });
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            return streamChat(currentMessages, retryCount + 1);
+          } else {
+            toast({
+              title: "Service Temporarily Unavailable",
+              description: "AI service is experiencing high demand. Please try again in a few minutes.",
+              variant: "destructive",
+            });
+            throw new Error("Rate limit exceeded after retries");
+          }
+        }
+        if (resp.status === 402) {
           const errorData = await resp.json();
+          toast({
+            title: "AI Service Error",
+            description: "AI credits exhausted. Please contact support.",
+            variant: "destructive",
+          });
           throw new Error(errorData.error);
         }
         throw new Error("Failed to start stream");
@@ -737,7 +774,11 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         speakText(assistantContent);
       }
     } catch (error) {
+      console.error("Stream chat error:", error);
+      setIsLoading(false);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
