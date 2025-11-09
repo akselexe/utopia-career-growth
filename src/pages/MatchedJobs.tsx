@@ -35,7 +35,6 @@ export default function MatchedJobs() {
   const { toast } = useToast();
   const [matches, setMatches] = useState<MatchedJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasConsent, setHasConsent] = useState<boolean>(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,26 +44,9 @@ export default function MatchedJobs() {
 
   useEffect(() => {
     if (user) {
-      checkConsentAndLoadMatches();
+      loadMatches();
     }
   }, [user]);
-
-  const checkConsentAndLoadMatches = async () => {
-    const { data } = await supabase
-      .from("privacy_preferences")
-      .select("ai_job_matching_consent")
-      .eq("user_id", user?.id)
-      .maybeSingle();
-    
-    const consentGranted = data?.ai_job_matching_consent ?? true; // Default true for backwards compatibility
-    setHasConsent(consentGranted);
-    
-    if (consentGranted) {
-      loadMatches();
-    } else {
-      setIsLoading(false);
-    }
-  };
 
   const loadMatches = async () => {
     try {
@@ -139,17 +121,7 @@ export default function MatchedJobs() {
           </p>
         </div>
 
-        {!hasConsent ? (
-          <Card className="p-8 border-destructive/50 bg-destructive/5">
-            <h2 className="text-2xl font-semibold mb-2">AI Job Matching Disabled</h2>
-            <p className="text-muted-foreground mb-4">
-              You haven't enabled AI Job Matching in your privacy settings. Enable it to get personalized job recommendations.
-            </p>
-            <Button onClick={() => navigate("/privacy-settings")}>
-              Go to Privacy Settings
-            </Button>
-          </Card>
-        ) : matches.length === 0 ? (
+        {matches.length === 0 ? (
           <Card className="p-12 text-center">
             <Briefcase className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-2">No Matches Yet</h2>
