@@ -618,22 +618,33 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       // Start camera (which includes fallback to audio-only)
       await startCamera();
 
-      toast({
-        title: "Interview Started",
-        description: "AI will greet you shortly. Hold the mic button to respond.",
-      });
+      // Show different message based on consent
+      if (hasBehavioralConsent) {
+        toast({
+          title: "Interview Started",
+          description: "AI will greet you shortly. Behavioral analysis is active.",
+        });
+      } else {
+        toast({
+          title: "Interview Started",
+          description: "AI will greet you shortly. Enable behavioral analysis in Privacy Settings for feedback.",
+          duration: 5000,
+        });
+      }
 
       // Then start the interview with AI greeting
+      console.log("Starting AI chat...");
       await streamChat([]);
+      console.log("AI chat started successfully");
     } catch (error) {
       console.error("Error starting interview:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start interview";
       toast({
-        title: "Error",
-        description: "Failed to start interview. Please try again.",
+        title: "Interview Start Failed",
+        description: errorMessage,
         variant: "destructive",
       });
       setHasStarted(false);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -662,6 +673,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const MAX_RETRIES = 3;
 
   const streamChat = async (currentMessages: Message[], retryCount = 0) => {
+    console.log("streamChat called, messages count:", currentMessages.length, "retry:", retryCount);
     setIsLoading(true);
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/interview-chat`;
     
@@ -669,7 +681,9 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTimeRef.current;
     if (timeSinceLastRequest < REQUEST_INTERVAL) {
-      await new Promise(resolve => setTimeout(resolve, REQUEST_INTERVAL - timeSinceLastRequest));
+      const waitTime = REQUEST_INTERVAL - timeSinceLastRequest;
+      console.log(`Rate limiting: waiting ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
     lastRequestTimeRef.current = Date.now();
     
@@ -679,6 +693,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         window.speechSynthesis.cancel();
       }
 
+      console.log("Fetching from:", CHAT_URL);
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -688,11 +703,14 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         body: JSON.stringify({ messages: currentMessages, jobTitle }),
       });
 
+      console.log("Response status:", resp.status);
+
       if (!resp.ok) {
         if (resp.status === 429) {
           // Rate limit error - implement retry with exponential backoff
           if (retryCount < MAX_RETRIES) {
             const waitTime = Math.pow(2, retryCount) * 3000; // 3s, 6s, 12s
+            console.log(`Rate limited, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             toast({
               title: "Rate Limit Reached",
               description: `Too many requests. Retrying in ${waitTime / 1000} seconds...`,
@@ -700,24 +718,30 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             await new Promise(resolve => setTimeout(resolve, waitTime));
             return streamChat(currentMessages, retryCount + 1);
           } else {
+            const errorMsg = "AI service is experiencing high demand. Please try again in a few minutes.";
+            console.error("Rate limit exceeded after retries");
             toast({
               title: "Service Temporarily Unavailable",
-              description: "AI service is experiencing high demand. Please try again in a few minutes.",
+              description: errorMsg,
               variant: "destructive",
             });
-            throw new Error("Rate limit exceeded after retries");
+            throw new Error(errorMsg);
           }
         }
         if (resp.status === 402) {
           const errorData = await resp.json();
+          const errorMsg = errorData.error || "AI credits exhausted. Please contact support.";
+          console.error("Payment required:", errorMsg);
           toast({
             title: "AI Service Error",
-            description: "AI credits exhausted. Please contact support.",
+            description: errorMsg,
             variant: "destructive",
           });
-          throw new Error(errorData.error);
+          throw new Error(errorMsg);
         }
-        throw new Error("Failed to start stream");
+        const errorText = await resp.text();
+        console.error("HTTP error:", resp.status, errorText);
+        throw new Error(`HTTP ${resp.status}: ${errorText}`);
       }
 
       if (!resp.body) throw new Error("No response body");
