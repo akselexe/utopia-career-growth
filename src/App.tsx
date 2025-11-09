@@ -17,6 +17,7 @@ import AIInterviewPage from "./pages/AIInterviewPage";
 import ProfileSettings from "./pages/ProfileSettings";
 import FootprintScanner from "./pages/FootprintScanner";
 import PrivacySettings from "./pages/PrivacySettings";
+import SeedTestData from "./pages/SeedTestData";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
             <Route path="/privacy-settings" element={<PrivacySettings />} />
+            <Route path="/seed-test-data" element={<SeedTestData />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

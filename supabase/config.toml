@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.match-candidates]
 verify_jwt = true
+
+[functions.seed-test-candidates]
+verify_jwt = false
