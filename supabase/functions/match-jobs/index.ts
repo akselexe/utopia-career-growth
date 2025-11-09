@@ -38,6 +38,51 @@ serve(async (req) => {
 
     console.log('Matching jobs for user:', userId);
 
+    // Fetch user's location and footprint data
+    const { data: seekerProfile } = await supabase
+      .from('seeker_profiles')
+      .select('location, github_url, twitter_url, skills')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const userLocation = seekerProfile?.location || '';
+    let footprintData = null;
+
+    // Auto-fetch footprint data if URLs are available
+    if (seekerProfile?.github_url || seekerProfile?.twitter_url) {
+      try {
+        let githubData = null;
+        let stackoverflowData = null;
+
+        // Fetch GitHub data
+        if (seekerProfile.github_url) {
+          const ghMatch = seekerProfile.github_url.match(/github\.com\/([^\/]+)/);
+          if (ghMatch) {
+            const { data: ghResult } = await supabase.functions.invoke('fetch-github-profile', {
+              body: { username: ghMatch[1] }
+            });
+            githubData = ghResult;
+          }
+        }
+
+        // Fetch StackOverflow data (stored in twitter_url field)
+        if (seekerProfile.twitter_url?.includes('stackoverflow')) {
+          const soMatch = seekerProfile.twitter_url.match(/stackoverflow\.com\/users\/(\d+)/);
+          if (soMatch) {
+            const { data: soResult } = await supabase.functions.invoke('fetch-stackoverflow-profile', {
+              body: { userId: soMatch[1] }
+            });
+            stackoverflowData = soResult;
+          }
+        }
+
+        footprintData = { githubData, stackoverflowData };
+        console.log('Fetched footprint data for enhanced matching');
+      } catch (error) {
+        console.error('Error fetching footprint data:', error);
+      }
+    }
+
     // Get internal active jobs
     const { data: internalJobs, error: jobsError } = await supabase
       .from('jobs')
@@ -130,14 +175,44 @@ serve(async (req) => {
 
     for (const job of allJobs) {
       try {
-        const matchPrompt = `
-You are a job matching expert. Analyze the match between this candidate's CV and the job posting.
-
+        // Build comprehensive candidate profile
+        let candidateProfile = `
 CV Analysis:
 - Score: ${cvScore}/100
 - Strengths: ${cvAnalysis.strengths?.join(', ') || 'None listed'}
 - Skills: ${cvSkills}
 - Missing Skills: ${cvAnalysis.missing_skills?.join(', ') || 'None'}
+- Location: ${userLocation || 'Not specified'}`;
+
+        // Add footprint data if available
+        if (footprintData?.githubData) {
+          candidateProfile += `
+
+GitHub Profile:
+- Public Repos: ${footprintData.githubData.profile?.publicRepos || 0}
+- Languages: ${footprintData.githubData.stats?.languages?.join(', ') || 'N/A'}
+- Recent Commits: ${footprintData.githubData.stats?.totalCommits || 0}`;
+        }
+
+        if (footprintData?.stackoverflowData) {
+          candidateProfile += `
+
+StackOverflow Profile:
+- Reputation: ${footprintData.stackoverflowData.profile?.reputation || 0}
+- Top Tags: ${footprintData.stackoverflowData.topTags?.slice(0, 5).map((t: any) => t.name).join(', ') || 'N/A'}`;
+        }
+
+        // Check location match
+        const locationMatch = userLocation && job.location && 
+          (userLocation.toLowerCase().includes(job.location.toLowerCase()) || 
+           job.location.toLowerCase().includes(userLocation.toLowerCase()) ||
+           job.location.toLowerCase() === 'remote');
+
+        const matchPrompt = `
+You are a job matching expert specializing in regional job placement. Analyze the match between this candidate and the job posting.
+
+Candidate Profile:
+${candidateProfile}
 
 Job Posting:
 - Title: ${job.title}
@@ -146,11 +221,13 @@ Job Posting:
 - Requirements: ${job.requirements}
 - Required Skills: ${job.skills_required?.join(', ') || 'Not specified'}
 
+IMPORTANT: Location matching is critical. ${locationMatch ? 'This is a STRONG location match - boost score by 15 points.' : userLocation && job.location.toLowerCase() !== 'remote' ? 'Location mismatch - reduce score by 15 points unless the role is remote.' : ''}
+
 Calculate a match score from 0-100 based on:
-1. Skill overlap (40% weight)
-2. Experience relevance (30% weight)
-3. CV quality score alignment (20% weight)
-4. Geographic compatibility (10% weight)
+1. Regional/Location compatibility (30% weight) - Prioritize jobs in candidate's region
+2. Skill overlap (35% weight) - Including GitHub/StackOverflow evidence
+3. Experience relevance (25% weight)
+4. CV quality score alignment (10% weight)
 
 Respond with JSON only:
 {
