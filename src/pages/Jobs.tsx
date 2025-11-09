@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, MapPin, DollarSign, Search, Loader2, Send, Sparkles } from "lucide-react";
+import { Briefcase, MapPin, DollarSign, Search, Loader2, Send, Sparkles, MapPinCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [matchedJobs, setMatchedJobs] = useState<Job[]>([]);
   const [otherJobs, setOtherJobs] = useState<Job[]>([]);
+  const [userLocation, setUserLocation] = useState<string>("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,6 +50,17 @@ const Jobs = () => {
 
   const loadJobs = async () => {
     try {
+      // Fetch user's location
+      const { data: profile } = await supabase
+        .from('seeker_profiles')
+        .select('location')
+        .eq('user_id', user?.id || '')
+        .maybeSingle();
+      
+      if (profile?.location) {
+        setUserLocation(profile.location);
+      }
+
       // Fetch all active jobs
       const { data: allJobs, error } = await supabase
         .from('jobs')
@@ -93,6 +105,20 @@ const Jobs = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isLocationMatch = (jobLocation: string) => {
+    if (!userLocation || !jobLocation) return false;
+    const userLoc = userLocation.toLowerCase();
+    const jobLoc = jobLocation.toLowerCase();
+    
+    // Check if locations match or if job is remote
+    return (
+      userLoc.includes(jobLoc) || 
+      jobLoc.includes(userLoc) ||
+      jobLoc === 'remote' ||
+      jobLoc.includes('remote')
+    );
   };
 
   const handleApply = async (jobId: string) => {
@@ -188,11 +214,17 @@ const Jobs = () => {
               <Card key={job.id} className="p-6 hover:shadow-md transition-all border-primary/20">
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-2xl font-bold">{job.title}</h3>
                       <Badge className="bg-primary/10 text-primary border-primary/20">
                         {job.match_score}% Match
                       </Badge>
+                      {isLocationMatch(job.location) && (
+                        <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1">
+                          <MapPinCheck className="w-3 h-3" />
+                          Your Region
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -267,7 +299,15 @@ const Jobs = () => {
               <Card key={job.id} className="p-6 hover:shadow-md transition-all">
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-2 flex-1">
-                    <h3 className="text-2xl font-bold">{job.title}</h3>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h3 className="text-2xl font-bold">{job.title}</h3>
+                      {isLocationMatch(job.location) && (
+                        <Badge variant="secondary" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 gap-1">
+                          <MapPinCheck className="w-3 h-3" />
+                          Your Region
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
