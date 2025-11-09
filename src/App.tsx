@@ -13,7 +13,6 @@ import CompanyDashboard from "./pages/CompanyDashboard";
 import MatchedJobs from "./pages/MatchedJobs";
 import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
-import JobMatcher from "./pages/JobMatcher";
 import ProfileSettings from "./pages/ProfileSettings";
 import FootprintScanner from "./pages/FootprintScanner";
 import NotFound from "./pages/NotFound";
@@ -37,7 +36,6 @@ const App = () => (
             <Route path="/matched-jobs" element={<MatchedJobs />} />
             <Route path="/cv-review" element={<CVReview />} />
             <Route path="/ai-interview" element={<AIInterviewPage />} />
-            <Route path="/job-matcher" element={<JobMatcher />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

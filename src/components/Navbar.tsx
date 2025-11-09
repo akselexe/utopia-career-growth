@@ -40,9 +40,6 @@ export const Navbar = () => {
               </Link>
               {userRole === "seeker" && (
                 <>
-                  <Link to="/job-matcher" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                    Job Matcher
-                  </Link>
                   <Link to="/cv-review" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     CV Review
                   </Link>
@@ -100,13 +97,6 @@ export const Navbar = () => {
                 </Link>
                 {userRole === "seeker" && (
                   <>
-                    <Link
-                      to="/job-matcher"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Job Matcher
-                    </Link>
                     <Link
                       to="/cv-review"
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
