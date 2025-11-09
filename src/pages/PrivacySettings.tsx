@@ -48,9 +48,9 @@ export default function PrivacySettings() {
         .from("privacy_preferences")
         .select("*")
         .eq("user_id", user?.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") {
+      if (error) {
         throw error;
       }
 
@@ -152,207 +152,266 @@ export default function PrivacySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Privacy & Data Settings</h1>
-              <p className="text-muted-foreground">Manage your privacy preferences and data</p>
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          {/* Header Section */}
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-6">
+              <Shield className="h-10 w-10 text-primary" />
             </div>
+            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Privacy & Data Control
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Your data, your choice. Full transparency and control over how AI uses your information.
+            </p>
           </div>
 
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              We're committed to protecting your privacy. You have full control over how your data is used.
+          <Alert className="mb-8 border-primary/20 bg-primary/5">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-foreground">
+              <strong>Your privacy matters.</strong> All AI features are optional and you can opt out anytime.
             </AlertDescription>
           </Alert>
 
-          {/* AI Features Consent */}
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Features & Consent</CardTitle>
-              <CardDescription>
-                Control which AI features can analyze your data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="behavioral">Behavioral Analysis</Label>
+          <div className="space-y-6">
+            {/* AI Features Consent */}
+            <Card className="border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Eye className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl">AI Features</CardTitle>
+                    <CardDescription className="text-base">
+                      Choose which AI capabilities can analyze your data
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6">
+                  <div className="flex items-start justify-between p-4 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="behavioral" className="text-base font-semibold cursor-pointer">
+                          Behavioral Analysis
+                        </Label>
+                        {preferences.behavioral_analysis_consent && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Active</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        AI analyzes facial expressions and body language during interviews to provide personalized feedback
+                      </p>
+                    </div>
+                    <Switch
+                      id="behavioral"
+                      checked={preferences.behavioral_analysis_consent}
+                      onCheckedChange={(checked) =>
+                        setPreferences({ ...preferences, behavioral_analysis_consent: checked })
+                      }
+                      className="ml-4"
+                    />
+                  </div>
+
+                  <div className="flex items-start justify-between p-4 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="footprint" className="text-base font-semibold cursor-pointer">
+                          Developer Footprint Scanning
+                        </Label>
+                        {preferences.footprint_scanning_consent && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Active</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Scan your GitHub and StackOverflow profiles to showcase your technical expertise
+                      </p>
+                    </div>
+                    <Switch
+                      id="footprint"
+                      checked={preferences.footprint_scanning_consent}
+                      onCheckedChange={(checked) =>
+                        setPreferences({ ...preferences, footprint_scanning_consent: checked })
+                      }
+                      className="ml-4"
+                    />
+                  </div>
+
+                  <div className="flex items-start justify-between p-4 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="matching" className="text-base font-semibold cursor-pointer">
+                          AI Job Matching
+                        </Label>
+                        {preferences.ai_job_matching_consent && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Active</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Get personalized job recommendations based on your skills and preferences
+                      </p>
+                    </div>
+                    <Switch
+                      id="matching"
+                      checked={preferences.ai_job_matching_consent}
+                      onCheckedChange={(checked) =>
+                        setPreferences({ ...preferences, ai_job_matching_consent: checked })
+                      }
+                      className="ml-4"
+                    />
+                  </div>
+
+                  <div className="flex items-start justify-between p-4 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="marketing" className="text-base font-semibold cursor-pointer">
+                          Marketing Communications
+                        </Label>
+                        {preferences.marketing_consent && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Active</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Receive curated job alerts and important platform updates
+                      </p>
+                    </div>
+                    <Switch
+                      id="marketing"
+                      checked={preferences.marketing_consent}
+                      onCheckedChange={(checked) =>
+                        setPreferences({ ...preferences, marketing_consent: checked })
+                      }
+                      className="ml-4"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Data Retention & Management */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Trash2 className="h-5 w-5 text-primary" />
+                    Data Retention
+                  </CardTitle>
+                  <CardDescription>
+                    Auto-delete old interview data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Select
+                    value={preferences.data_retention_days.toString()}
+                    onValueChange={(value) =>
+                      setPreferences({ ...preferences, data_retention_days: parseInt(value) })
+                    }
+                  >
+                    <SelectTrigger id="retention" className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="30">Delete after 30 days</SelectItem>
+                      <SelectItem value="90">Delete after 90 days</SelectItem>
+                      <SelectItem value="180">Delete after 6 months</SelectItem>
+                      <SelectItem value="365">Delete after 1 year</SelectItem>
+                      <SelectItem value="0">Keep forever</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-sm text-muted-foreground">
-                    Allow AI to analyze facial expressions and body language during interviews
+                    Interview recordings and behavioral data will be automatically removed
                   </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Download className="h-5 w-5 text-primary" />
+                    Data Management
+                  </CardTitle>
+                  <CardDescription>
+                    Export or delete your data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button onClick={exportData} variant="outline" className="w-full h-12 justify-start">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export All My Data
+                  </Button>
+                  <Button onClick={deleteInterviewData} variant="outline" className="w-full h-12 justify-start text-destructive hover:text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Interview Data
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Transparency Section */}
+            <Card className="border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-xl">AI Transparency</CardTitle>
+                <CardDescription>
+                  Understanding how our AI systems work
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="space-y-2 p-4 rounded-lg bg-accent/5 border border-border/50">
+                    <h4 className="font-semibold text-base">Job Matching</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Location fit</span>
+                        <span className="font-medium">30%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Skills match</span>
+                        <span className="font-medium">40%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CV quality</span>
+                        <span className="font-medium">20%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cultural fit</span>
+                        <span className="font-medium">10%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 p-4 rounded-lg bg-accent/5 border border-border/50">
+                    <h4 className="font-semibold text-base">Behavioral Analysis</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Analyzes facial expressions, posture, and engagement. Real-time processing only - no permanent video storage.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 p-4 rounded-lg bg-accent/5 border border-border/50">
+                    <h4 className="font-semibold text-base">CV Analysis</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Reviews your CV structure, content quality, and provides actionable improvement suggestions.
+                    </p>
+                  </div>
                 </div>
-                <Switch
-                  id="behavioral"
-                  checked={preferences.behavioral_analysis_consent}
-                  onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, behavioral_analysis_consent: checked })
-                  }
-                />
-              </div>
+              </CardContent>
+            </Card>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="footprint">Footprint Scanning</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allow scanning of your GitHub and StackOverflow profiles
-                  </p>
-                </div>
-                <Switch
-                  id="footprint"
-                  checked={preferences.footprint_scanning_consent}
-                  onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, footprint_scanning_consent: checked })
-                  }
-                />
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="matching">AI Job Matching</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Use AI to match you with relevant job opportunities
-                  </p>
-                </div>
-                <Switch
-                  id="matching"
-                  checked={preferences.ai_job_matching_consent}
-                  onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, ai_job_matching_consent: checked })
-                  }
-                />
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="marketing">Marketing Communications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive job recommendations and platform updates
-                  </p>
-                </div>
-                <Switch
-                  id="marketing"
-                  checked={preferences.marketing_consent}
-                  onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, marketing_consent: checked })
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Retention */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Retention</CardTitle>
-              <CardDescription>
-                Choose how long we keep your interview and behavioral data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Label htmlFor="retention">Auto-delete data after</Label>
-                <Select
-                  value={preferences.data_retention_days.toString()}
-                  onValueChange={(value) =>
-                    setPreferences({ ...preferences, data_retention_days: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger id="retention">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 days</SelectItem>
-                    <SelectItem value="90">90 days</SelectItem>
-                    <SelectItem value="180">180 days</SelectItem>
-                    <SelectItem value="365">1 year</SelectItem>
-                    <SelectItem value="0">Never (keep indefinitely)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  Interview recordings and behavioral analysis data will be automatically deleted after this period
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>
-                Export or delete your personal data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={exportData} variant="outline" className="flex-1">
-                  <Download className="mr-2 h-4 w-4" />
-                  Export All My Data
-                </Button>
-                <Button onClick={deleteInterviewData} variant="outline" className="flex-1">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Interview Data
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                You can export all your data in JSON format or permanently delete specific data types
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Transparency */}
-          <Card>
-            <CardHeader>
-              <CardTitle>How We Use AI</CardTitle>
-              <CardDescription>
-                Understanding our AI systems
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3 text-sm">
-                <div>
-                  <h4 className="font-semibold mb-1">Job Matching (70-100 score)</h4>
-                  <p className="text-muted-foreground">
-                    • 30% Location compatibility<br />
-                    • 40% Skills and experience match<br />
-                    • 20% CV quality and completeness<br />
-                    • 10% Cultural fit indicators
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <h4 className="font-semibold mb-1">Behavioral Analysis</h4>
-                  <p className="text-muted-foreground">
-                    AI analyzes facial expressions, posture, and engagement during interviews to provide feedback. This is optional and requires your explicit consent.
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <h4 className="font-semibold mb-1">CV Analysis</h4>
-                  <p className="text-muted-foreground">
-                    AI reviews your CV for strengths, weaknesses, and improvement suggestions based on industry standards.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end">
-            <Button onClick={savePreferences} disabled={saving}>
-              {saving ? "Saving..." : "Save Privacy Settings"}
-            </Button>
+            {/* Save Button */}
+            <div className="flex justify-end pt-4">
+              <Button 
+                onClick={savePreferences} 
+                disabled={saving}
+                size="lg"
+                className="min-w-[200px] h-12 text-base"
+              >
+                {saving ? "Saving..." : "Save All Settings"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
