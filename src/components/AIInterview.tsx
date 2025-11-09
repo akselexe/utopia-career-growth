@@ -139,31 +139,28 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             console.log("Video is visible:", rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0);
           }
 
-          // Set camera on
+          // Start behavioral analysis after video is confirmed playing
+          console.log("Setting up behavioral analysis interval...");
+          if (analysisIntervalRef.current) {
+            clearInterval(analysisIntervalRef.current);
+          }
+          
+          // Set camera on BEFORE starting analysis
           setIsCameraOn(true);
           
-          // Only set up behavioral analysis if consent is granted
-          if (hasBehavioralConsent) {
-            console.log("Setting up behavioral analysis interval...");
-            if (analysisIntervalRef.current) {
-              clearInterval(analysisIntervalRef.current);
-            }
-            
-            // Start first capture after a short delay to ensure state is updated
-            setTimeout(() => {
-              console.log("Running first behavioral analysis...");
-              captureAndAnalyzeFrame();
-            }, 3000);
-            
-            // Then continue every 15 seconds
-            analysisIntervalRef.current = setInterval(() => {
-              captureAndAnalyzeFrame();
-            }, 15000);
-            
-            console.log("Behavioral analysis interval set up successfully");
-          } else {
-            console.log("Behavioral analysis skipped - consent not granted");
-          }
+          // Start first capture after a short delay to ensure state is updated
+          setTimeout(() => {
+            console.log("Running first behavioral analysis...");
+            captureAndAnalyzeFrame();
+          }, 3000);
+          
+          // Then continue every 15 seconds
+          analysisIntervalRef.current = setInterval(() => {
+            console.log("Interval triggered - calling captureAndAnalyzeFrame");
+            captureAndAnalyzeFrame();
+          }, 15000);
+          
+          console.log("Behavioral analysis interval set up successfully");
         };
 
         const onError = (e: Event) => {
@@ -276,12 +273,13 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const captureAndAnalyzeFrame = async () => {
-    // Double-check consent (should already be checked before interval is set)
+    console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
+    
+    // Check consent before analyzing
     if (!hasBehavioralConsent) {
+      console.log("Behavioral analysis consent not granted, skipping analysis");
       return;
     }
-    
-    console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
     
     if (!videoRef.current || !videoRef.current.srcObject) {
       console.log("Early return - no video or no stream");
@@ -618,33 +616,22 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       // Start camera (which includes fallback to audio-only)
       await startCamera();
 
-      // Show different message based on consent
-      if (hasBehavioralConsent) {
-        toast({
-          title: "Interview Started",
-          description: "AI will greet you shortly. Behavioral analysis is active.",
-        });
-      } else {
-        toast({
-          title: "Interview Started",
-          description: "AI will greet you shortly. Enable behavioral analysis in Privacy Settings for feedback.",
-          duration: 5000,
-        });
-      }
+      toast({
+        title: "Interview Started",
+        description: "AI will greet you shortly. Hold the mic button to respond.",
+      });
 
       // Then start the interview with AI greeting
-      console.log("Starting AI chat...");
       await streamChat([]);
-      console.log("AI chat started successfully");
     } catch (error) {
       console.error("Error starting interview:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to start interview";
       toast({
-        title: "Interview Start Failed",
-        description: errorMessage,
+        title: "Error",
+        description: "Failed to start interview. Please try again.",
         variant: "destructive",
       });
       setHasStarted(false);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -667,25 +654,9 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const lastRequestTimeRef = useRef<number>(0);
-  const requestCountRef = useRef<number>(0);
-  const REQUEST_INTERVAL = 2000; // 2 seconds between requests
-  const MAX_RETRIES = 3;
-
-  const streamChat = async (currentMessages: Message[], retryCount = 0) => {
-    console.log("streamChat called, messages count:", currentMessages.length, "retry:", retryCount);
+  const streamChat = async (currentMessages: Message[]) => {
     setIsLoading(true);
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/interview-chat`;
-    
-    // Rate limiting check
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTimeRef.current;
-    if (timeSinceLastRequest < REQUEST_INTERVAL) {
-      const waitTime = REQUEST_INTERVAL - timeSinceLastRequest;
-      console.log(`Rate limiting: waiting ${waitTime}ms`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-    lastRequestTimeRef.current = Date.now();
     
     try {
       // Cancel any ongoing speech
@@ -693,7 +664,6 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         window.speechSynthesis.cancel();
       }
 
-      console.log("Fetching from:", CHAT_URL);
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -703,45 +673,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         body: JSON.stringify({ messages: currentMessages, jobTitle }),
       });
 
-      console.log("Response status:", resp.status);
-
       if (!resp.ok) {
-        if (resp.status === 429) {
-          // Rate limit error - implement retry with exponential backoff
-          if (retryCount < MAX_RETRIES) {
-            const waitTime = Math.pow(2, retryCount) * 3000; // 3s, 6s, 12s
-            console.log(`Rate limited, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-            toast({
-              title: "Rate Limit Reached",
-              description: `Too many requests. Retrying in ${waitTime / 1000} seconds...`,
-            });
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            return streamChat(currentMessages, retryCount + 1);
-          } else {
-            const errorMsg = "AI service is experiencing high demand. Please try again in a few minutes.";
-            console.error("Rate limit exceeded after retries");
-            toast({
-              title: "Service Temporarily Unavailable",
-              description: errorMsg,
-              variant: "destructive",
-            });
-            throw new Error(errorMsg);
-          }
-        }
-        if (resp.status === 402) {
+        if (resp.status === 429 || resp.status === 402) {
           const errorData = await resp.json();
-          const errorMsg = errorData.error || "AI credits exhausted. Please contact support.";
-          console.error("Payment required:", errorMsg);
-          toast({
-            title: "AI Service Error",
-            description: errorMsg,
-            variant: "destructive",
-          });
-          throw new Error(errorMsg);
+          throw new Error(errorData.error);
         }
-        const errorText = await resp.text();
-        console.error("HTTP error:", resp.status, errorText);
-        throw new Error(`HTTP ${resp.status}: ${errorText}`);
+        throw new Error("Failed to start stream");
       }
 
       if (!resp.body) throw new Error("No response body");
@@ -800,11 +737,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
         speakText(assistantContent);
       }
     } catch (error) {
-      console.error("Stream chat error:", error);
-      setIsLoading(false);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -830,45 +763,6 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     }
   };
 
-  const generateProfileWithRetry = async (retryCount = 0): Promise<any> => {
-    const MAX_PROFILE_RETRIES = 3;
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-profile', {
-        body: { 
-          messages, 
-          behavioralFeedback,
-          jobTitle 
-        }
-      });
-
-      // Check if it's a rate limit error
-      if (error) {
-        const errorMessage = error.message || '';
-        if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
-          if (retryCount < MAX_PROFILE_RETRIES) {
-            const waitTime = Math.pow(2, retryCount) * 3000; // 3s, 6s, 12s
-            console.log(`Profile generation rate limited, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_PROFILE_RETRIES})`);
-            toast({
-              title: "Generating Profile",
-              description: `High demand detected. Retrying in ${waitTime / 1000} seconds...`,
-            });
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            return generateProfileWithRetry(retryCount + 1);
-          } else {
-            console.error("Profile generation rate limited after retries");
-            throw new Error("AI service is busy. Your interview data is saved - profile generation will be available shortly.");
-          }
-        }
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
   const stopInterview = async () => {
     stopCamera();
     
@@ -876,22 +770,26 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     if (messages.length > 0) {
       setIsGeneratingProfile(true);
       try {
-        const data = await generateProfileWithRetry();
-        
-        if (data?.profileAnalysis) {
-          setProfileAnalysis(data.profileAnalysis);
+        const { data, error } = await supabase.functions.invoke('generate-profile', {
+          body: { 
+            messages, 
+            behavioralFeedback,
+            jobTitle 
+          }
+        });
+
+        if (error) {
+          console.error("Profile generation error:", error);
           toast({
-            title: "Profile Generated!",
-            description: "Your comprehensive interview analysis is ready.",
+            title: "Profile Generation Failed",
+            description: "Could not generate profile analysis. Showing behavioral feedback only.",
+            variant: "destructive",
           });
+        } else if (data?.profileAnalysis) {
+          setProfileAnalysis(data.profileAnalysis);
         }
       } catch (error) {
         console.error("Error generating profile:", error);
-        toast({
-          title: "Profile Generation Delayed",
-          description: error instanceof Error ? error.message : "Could not generate profile analysis. Showing behavioral feedback only.",
-          variant: "destructive",
-        });
       } finally {
         setIsGeneratingProfile(false);
       }
@@ -900,7 +798,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setShowReport(true);
     toast({
       title: "Interview Complete!",
-      description: messages.length > 0 ? "Review your performance below." : "Start your interview to generate a report.",
+      description: "Generating your comprehensive profile report...",
     });
   };
 
