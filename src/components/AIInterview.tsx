@@ -139,28 +139,31 @@ export const AIInterview = ({ userId }: { userId: string }) => {
             console.log("Video is visible:", rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0);
           }
 
-          // Start behavioral analysis after video is confirmed playing
-          console.log("Setting up behavioral analysis interval...");
-          if (analysisIntervalRef.current) {
-            clearInterval(analysisIntervalRef.current);
-          }
-          
-          // Set camera on BEFORE starting analysis
+          // Set camera on
           setIsCameraOn(true);
           
-          // Start first capture after a short delay to ensure state is updated
-          setTimeout(() => {
-            console.log("Running first behavioral analysis...");
-            captureAndAnalyzeFrame();
-          }, 3000);
-          
-          // Then continue every 15 seconds
-          analysisIntervalRef.current = setInterval(() => {
-            console.log("Interval triggered - calling captureAndAnalyzeFrame");
-            captureAndAnalyzeFrame();
-          }, 15000);
-          
-          console.log("Behavioral analysis interval set up successfully");
+          // Only set up behavioral analysis if consent is granted
+          if (hasBehavioralConsent) {
+            console.log("Setting up behavioral analysis interval...");
+            if (analysisIntervalRef.current) {
+              clearInterval(analysisIntervalRef.current);
+            }
+            
+            // Start first capture after a short delay to ensure state is updated
+            setTimeout(() => {
+              console.log("Running first behavioral analysis...");
+              captureAndAnalyzeFrame();
+            }, 3000);
+            
+            // Then continue every 15 seconds
+            analysisIntervalRef.current = setInterval(() => {
+              captureAndAnalyzeFrame();
+            }, 15000);
+            
+            console.log("Behavioral analysis interval set up successfully");
+          } else {
+            console.log("Behavioral analysis skipped - consent not granted");
+          }
         };
 
         const onError = (e: Event) => {
@@ -273,13 +276,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   };
 
   const captureAndAnalyzeFrame = async () => {
-    console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
-    
-    // Check consent before analyzing
+    // Double-check consent (should already be checked before interval is set)
     if (!hasBehavioralConsent) {
-      console.log("Behavioral analysis consent not granted, skipping analysis");
       return;
     }
+    
+    console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
     
     if (!videoRef.current || !videoRef.current.srcObject) {
       console.log("Early return - no video or no stream");
