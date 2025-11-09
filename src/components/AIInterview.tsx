@@ -830,6 +830,45 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     }
   };
 
+  const generateProfileWithRetry = async (retryCount = 0): Promise<any> => {
+    const MAX_PROFILE_RETRIES = 3;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-profile', {
+        body: { 
+          messages, 
+          behavioralFeedback,
+          jobTitle 
+        }
+      });
+
+      // Check if it's a rate limit error
+      if (error) {
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
+          if (retryCount < MAX_PROFILE_RETRIES) {
+            const waitTime = Math.pow(2, retryCount) * 3000; // 3s, 6s, 12s
+            console.log(`Profile generation rate limited, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_PROFILE_RETRIES})`);
+            toast({
+              title: "Generating Profile",
+              description: `High demand detected. Retrying in ${waitTime / 1000} seconds...`,
+            });
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            return generateProfileWithRetry(retryCount + 1);
+          } else {
+            console.error("Profile generation rate limited after retries");
+            throw new Error("AI service is busy. Your interview data is saved - profile generation will be available shortly.");
+          }
+        }
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const stopInterview = async () => {
     stopCamera();
     
@@ -837,26 +876,22 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     if (messages.length > 0) {
       setIsGeneratingProfile(true);
       try {
-        const { data, error } = await supabase.functions.invoke('generate-profile', {
-          body: { 
-            messages, 
-            behavioralFeedback,
-            jobTitle 
-          }
-        });
-
-        if (error) {
-          console.error("Profile generation error:", error);
-          toast({
-            title: "Profile Generation Failed",
-            description: "Could not generate profile analysis. Showing behavioral feedback only.",
-            variant: "destructive",
-          });
-        } else if (data?.profileAnalysis) {
+        const data = await generateProfileWithRetry();
+        
+        if (data?.profileAnalysis) {
           setProfileAnalysis(data.profileAnalysis);
+          toast({
+            title: "Profile Generated!",
+            description: "Your comprehensive interview analysis is ready.",
+          });
         }
       } catch (error) {
         console.error("Error generating profile:", error);
+        toast({
+          title: "Profile Generation Delayed",
+          description: error instanceof Error ? error.message : "Could not generate profile analysis. Showing behavioral feedback only.",
+          variant: "destructive",
+        });
       } finally {
         setIsGeneratingProfile(false);
       }
@@ -865,7 +900,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
     setShowReport(true);
     toast({
       title: "Interview Complete!",
-      description: "Generating your comprehensive profile report...",
+      description: messages.length > 0 ? "Review your performance below." : "Start your interview to generate a report.",
     });
   };
 
