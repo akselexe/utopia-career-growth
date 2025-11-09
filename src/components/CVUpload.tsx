@@ -120,6 +120,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   const [targetRole, setTargetRole] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("modern");
+  const [hasJobMatchingConsent, setHasJobMatchingConsent] = useState<boolean>(true);
 
   // Add/Remove handlers for dynamic sections
   const addExperience = () => {
@@ -335,26 +336,37 @@ export const CVUpload = ({ userId }: { userId: string }) => {
         description: `Your CV scored ${aiData.analysis.score}/100. Finding matching jobs...`,
       });
 
-      // Trigger automatic job matching
-      try {
-        const { data: matchData, error: matchError } = await supabase.functions.invoke('match-jobs', {
-          body: { 
-            cvAnalysis: aiData.analysis,
-            userId: userId
-          },
-        });
+      // Check consent before triggering automatic job matching
+      const { data: privacyPrefs } = await supabase
+        .from("privacy_preferences")
+        .select("ai_job_matching_consent")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      const consentGranted = privacyPrefs?.ai_job_matching_consent ?? true;
+      setHasJobMatchingConsent(consentGranted);
 
-        if (matchError) {
-          console.error('Job matching error:', matchError);
-        } else if (matchData?.matches) {
-          toast({
-            title: "Job Matches Found!",
-            description: `Found ${matchData.matches.length} jobs matching your profile (≥70% match)`,
+      if (consentGranted) {
+        try {
+          const { data: matchData, error: matchError } = await supabase.functions.invoke('match-jobs', {
+            body: { 
+              cvAnalysis: aiData.analysis,
+              userId: userId
+            },
           });
+
+          if (matchError) {
+            console.error('Job matching error:', matchError);
+          } else if (matchData?.matches) {
+            toast({
+              title: "Job Matches Found!",
+              description: `Found ${matchData.matches.length} jobs matching your profile (≥70% match)`,
+            });
+          }
+        } catch (matchError) {
+          console.error('Failed to match jobs:', matchError);
+          // Don't show error to user - matching is a bonus feature
         }
-      } catch (matchError) {
-        console.error('Failed to match jobs:', matchError);
-        // Don't show error to user - matching is a bonus feature
       }
 
     } catch (error) {

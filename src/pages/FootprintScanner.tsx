@@ -23,6 +23,7 @@ const FootprintScanner = () => {
   const [githubData, setGithubData] = useState<any>(null);
   const [stackoverflowData, setStackoverflowData] = useState<any>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [hasConsent, setHasConsent] = useState<boolean>(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -40,6 +41,21 @@ const FootprintScanner = () => {
     if (!user) return;
     setLoading(true);
     try {
+      // Check consent first
+      const { data: privacyPrefs } = await supabase
+        .from('privacy_preferences')
+        .select('footprint_scanning_consent')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      const consentGranted = privacyPrefs?.footprint_scanning_consent ?? false;
+      setHasConsent(consentGranted);
+      
+      if (!consentGranted) {
+        setLoading(false);
+        return;
+      }
+
       const { data: seekerProfile } = await supabase
         .from('seeker_profiles')
         .select('github_url, twitter_url')
@@ -195,8 +211,22 @@ const FootprintScanner = () => {
             <p className="text-muted-foreground text-lg">Analyze your public contributions across platforms</p>
           </div>
 
-          {/* Info Card */}
-          <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
+          {!hasConsent && !loading && (
+            <Card className="p-8 mb-8 border-destructive/50 bg-destructive/5">
+              <h3 className="text-xl font-semibold mb-3">Footprint Scanning Disabled</h3>
+              <p className="text-muted-foreground mb-4">
+                You haven't enabled Developer Footprint Scanning in your privacy settings. Enable it to analyze your GitHub and StackOverflow profiles.
+              </p>
+              <Button onClick={() => navigate('/privacy-settings')}>
+                Go to Privacy Settings
+              </Button>
+            </Card>
+          )}
+
+          {hasConsent && (
+            <>
+              {/* Info Card */}
+              <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
             <div className="flex items-start gap-3">
               <Search className="w-5 h-5 text-primary mt-1" />
               <div>
@@ -330,6 +360,8 @@ const FootprintScanner = () => {
                 <Button>Update Profile</Button>
               </Link>
             </Card>
+          )}
+            </>
           )}
         </main>
       </div>

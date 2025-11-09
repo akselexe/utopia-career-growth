@@ -23,6 +23,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const [showReport, setShowReport] = useState(false);
   const [profileAnalysis, setProfileAnalysis] = useState<string>("");
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false);
+  const [hasBehavioralConsent, setHasBehavioralConsent] = useState<boolean | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,6 +34,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
+    checkBehavioralConsent();
     return () => {
       stopCamera();
       if (analysisIntervalRef.current) {
@@ -40,6 +42,16 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       }
     };
   }, []);
+
+  const checkBehavioralConsent = async () => {
+    const { data } = await supabase
+      .from("privacy_preferences")
+      .select("behavioral_analysis_consent")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    setHasBehavioralConsent(data?.behavioral_analysis_consent ?? false);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -262,6 +274,12 @@ export const AIInterview = ({ userId }: { userId: string }) => {
 
   const captureAndAnalyzeFrame = async () => {
     console.log("captureAndAnalyzeFrame called, videoRef:", !!videoRef.current);
+    
+    // Check consent before analyzing
+    if (!hasBehavioralConsent) {
+      console.log("Behavioral analysis consent not granted, skipping analysis");
+      return;
+    }
     
     if (!videoRef.current || !videoRef.current.srcObject) {
       console.log("Early return - no video or no stream");
