@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.export-user-data]
 verify_jwt = true
+
+[functions.parse-job-description]
+verify_jwt = true

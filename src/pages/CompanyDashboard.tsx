@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Users, Target, TrendingUp, Plus, LogOut, Loader2 } from "lucide-react";
+import { Briefcase, Users, Target, TrendingUp, Plus, LogOut, Loader2, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
@@ -27,6 +35,9 @@ const CompanyDashboard = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [stats, setStats] = useState({ jobs: 0, candidates: 0, applications: 0 });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiDescription, setAiDescription] = useState("");
+  const [isParsingAI, setIsParsingAI] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -61,6 +72,59 @@ const CompanyDashboard = () => {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+    }
+  };
+
+  const handleAIJobParsing = async () => {
+    if (!aiDescription.trim() || aiDescription.trim().length < 20) {
+      toast({
+        title: "Description too short",
+        description: "Please provide at least 20 characters describing the job.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsParsingAI(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-job-description', {
+        body: { description: aiDescription }
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const { jobData } = data;
+
+      // Fill form fields with AI-extracted data
+      (document.getElementById('title') as HTMLInputElement).value = jobData.title || '';
+      (document.getElementById('location') as HTMLInputElement).value = jobData.location || '';
+      (document.getElementById('salaryMin') as HTMLInputElement).value = jobData.salaryMin?.toString() || '';
+      (document.getElementById('salaryMax') as HTMLInputElement).value = jobData.salaryMax?.toString() || '';
+      (document.getElementById('description') as HTMLTextAreaElement).value = jobData.description || '';
+      (document.getElementById('requirements') as HTMLTextAreaElement).value = jobData.requirements || '';
+
+      toast({
+        title: "AI Parsing Complete!",
+        description: "Form fields have been filled with AI-extracted information. Review and submit.",
+      });
+
+      setAiDialogOpen(false);
+      setAiDescription("");
+
+    } catch (error) {
+      console.error('AI parsing error:', error);
+      toast({
+        title: "AI Parsing Failed",
+        description: error instanceof Error ? error.message : "Please try again or fill the form manually",
+        variant: "destructive",
+      });
+    } finally {
+      setIsParsingAI(false);
     }
   };
 
@@ -189,13 +253,65 @@ const CompanyDashboard = () => {
           {/* Job Posting Form */}
           <Card className="lg:col-span-2 p-6 space-y-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Plus className="w-6 h-6 text-primary" />
-                Post a New Job
-              </h2>
-              <p className="text-muted-foreground">
-                Fill out the details below to attract the best candidates
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Plus className="w-6 h-6 text-primary" />
+                    Post a New Job
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Fill out the details below to attract the best candidates
+                  </p>
+                </div>
+                <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      AI Assistant
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        AI-Powered Job Posting
+                      </DialogTitle>
+                      <DialogDescription>
+                        Describe the job in a few sentences and AI will help fill out the form
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-description">Job Description</Label>
+                        <Textarea
+                          id="ai-description"
+                          placeholder="Example: We're looking for a Senior React Developer to join our remote team. Must have 5+ years experience with React, TypeScript, and Node.js. Salary range $100k-$150k. Will be building our next-generation SaaS platform."
+                          rows={8}
+                          value={aiDescription}
+                          onChange={(e) => setAiDescription(e.target.value)}
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleAIJobParsing} 
+                        disabled={isParsingAI || aiDescription.trim().length < 20}
+                        className="w-full gap-2"
+                      >
+                        {isParsingAI ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Parsing with AI...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Generate Job Post
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             <form onSubmit={handlePostJob} className="space-y-4">
