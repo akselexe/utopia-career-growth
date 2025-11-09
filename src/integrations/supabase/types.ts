@@ -163,9 +163,44 @@ export type Database = {
           },
         ]
       }
+      data_access_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       interview_sessions: {
         Row: {
           ai_feedback: Json | null
+          behavioral_consent_given: boolean | null
+          consent_timestamp: string | null
           created_at: string | null
           duration_seconds: number | null
           id: string
@@ -176,6 +211,8 @@ export type Database = {
         }
         Insert: {
           ai_feedback?: Json | null
+          behavioral_consent_given?: boolean | null
+          consent_timestamp?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           id?: string
@@ -186,6 +223,8 @@ export type Database = {
         }
         Update: {
           ai_feedback?: Json | null
+          behavioral_consent_given?: boolean | null
+          consent_timestamp?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           id?: string
@@ -262,6 +301,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      privacy_preferences: {
+        Row: {
+          ai_job_matching_consent: boolean | null
+          behavioral_analysis_consent: boolean | null
+          consent_date: string | null
+          created_at: string | null
+          data_retention_days: number | null
+          footprint_scanning_consent: boolean | null
+          id: string
+          marketing_consent: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_job_matching_consent?: boolean | null
+          behavioral_analysis_consent?: boolean | null
+          consent_date?: string | null
+          created_at?: string | null
+          data_retention_days?: number | null
+          footprint_scanning_consent?: boolean | null
+          id?: string
+          marketing_consent?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_job_matching_consent?: boolean | null
+          behavioral_analysis_consent?: boolean | null
+          consent_date?: string | null
+          created_at?: string | null
+          data_retention_days?: number | null
+          footprint_scanning_consent?: boolean | null
+          id?: string
+          marketing_consent?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

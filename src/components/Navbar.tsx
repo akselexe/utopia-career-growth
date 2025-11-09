@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, Briefcase } from "lucide-react";
+import { Menu, X, Briefcase, Shield } from "lucide-react";
 import { useState } from "react";
 
 export const Navbar = () => {
@@ -55,6 +55,12 @@ export const Navbar = () => {
               <Link to="/profile-settings">
                 <Button variant="ghost" size="sm">
                   Profile
+                </Button>
+              </Link>
+              <Link to="/privacy-settings">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  Privacy
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -119,6 +125,14 @@ export const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/privacy-settings"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2 flex items-center gap-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Shield className="h-4 w-4" />
+                  Privacy
                 </Link>
                 <div className="px-4 pt-2">
                   <Button

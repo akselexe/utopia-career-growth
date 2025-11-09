@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.generate-profile]
 verify_jwt = true
+
+[functions.export-user-data]
+verify_jwt = true

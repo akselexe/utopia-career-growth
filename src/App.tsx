@@ -15,6 +15,7 @@ import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
 import ProfileSettings from "./pages/ProfileSettings";
 import FootprintScanner from "./pages/FootprintScanner";
+import PrivacySettings from "./pages/PrivacySettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/ai-interview" element={<AIInterviewPage />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
+            <Route path="/privacy-settings" element={<PrivacySettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
