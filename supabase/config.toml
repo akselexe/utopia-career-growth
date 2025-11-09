@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.parse-job-description]
 verify_jwt = true
+
+[functions.match-candidates]
+verify_jwt = true

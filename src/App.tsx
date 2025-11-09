@@ -11,6 +11,7 @@ import Jobs from "./pages/Jobs";
 import SeekerDashboard from "./pages/SeekerDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import MatchedJobs from "./pages/MatchedJobs";
+import MatchedCandidates from "./pages/MatchedCandidates";
 import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
 import ProfileSettings from "./pages/ProfileSettings";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
             <Route path="/dashboard/company" element={<CompanyDashboard />} />
             <Route path="/matched-jobs" element={<MatchedJobs />} />
+            <Route path="/matched-candidates/:jobId" element={<MatchedCandidates />} />
             <Route path="/cv-review" element={<CVReview />} />
             <Route path="/ai-interview" element={<AIInterviewPage />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />

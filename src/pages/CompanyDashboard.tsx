@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Users, Target, TrendingUp, Plus, LogOut, Loader2, Sparkles } from "lucide-react";
+import { Briefcase, Users, Target, TrendingUp, Plus, LogOut, Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,69 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+const JobsList = ({ userId }: { userId?: string }) => {
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userId) {
+      loadJobs();
+    }
+  }, [userId]);
+
+  const loadJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('company_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setJobs(data || []);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />;
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-4">
+        No active jobs yet. Post your first job above!
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {jobs.map((job) => (
+        <div
+          key={job.id}
+          className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+          onClick={() => navigate(`/matched-candidates/${job.id}`)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{job.title}</p>
+              <p className="text-xs text-muted-foreground">{job.location}</p>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const jobSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
@@ -405,21 +468,8 @@ const CompanyDashboard = () => {
           {/* Sidebar */}
           <div className="space-y-4">
             <Card className="p-6 space-y-4">
-              <h3 className="text-xl font-bold">Quick Actions</h3>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Users className="w-4 h-4" />
-                  View Candidates
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  Manage Jobs
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Target className="w-4 h-4" />
-                  AI Recommendations
-                </Button>
-              </div>
+              <h3 className="text-xl font-bold">Your Active Jobs</h3>
+              <JobsList userId={user?.id} />
             </Card>
 
             <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-2">
