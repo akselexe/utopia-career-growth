@@ -85,12 +85,48 @@ const Jobs = () => {
         };
       });
 
-      // Sort: matched jobs first (by score), then others
+      // Helper function to check location match for sorting
+      const checkLocationMatch = (jobLocation: string) => {
+        if (!profile?.location || !jobLocation) return false;
+        const userLoc = profile.location.toLowerCase();
+        const jobLoc = jobLocation.toLowerCase();
+        return (
+          userLoc.includes(jobLoc) || 
+          jobLoc.includes(userLoc) ||
+          jobLoc === 'remote' ||
+          jobLoc.includes('remote')
+        );
+      };
+
+      // Sort: matched jobs first (by location match, then by score)
       const matched = jobsWithScores
         .filter(job => job.match_score && job.match_score >= 70)
-        .sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+        .sort((a, b) => {
+          const aLocationMatch = checkLocationMatch(a.location);
+          const bLocationMatch = checkLocationMatch(b.location);
+          
+          // Location matches first
+          if (aLocationMatch && !bLocationMatch) return -1;
+          if (!aLocationMatch && bLocationMatch) return 1;
+          
+          // Then by match score
+          return (b.match_score || 0) - (a.match_score || 0);
+        });
       
-      const others = jobsWithScores.filter(job => !job.match_score || job.match_score < 70);
+      // Sort other jobs by location match, then by creation date
+      const others = jobsWithScores
+        .filter(job => !job.match_score || job.match_score < 70)
+        .sort((a, b) => {
+          const aLocationMatch = checkLocationMatch(a.location);
+          const bLocationMatch = checkLocationMatch(b.location);
+          
+          // Location matches first
+          if (aLocationMatch && !bLocationMatch) return -1;
+          if (!aLocationMatch && bLocationMatch) return 1;
+          
+          // Then by creation date (newest first)
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
 
       setMatchedJobs(matched);
       setOtherJobs(others);
