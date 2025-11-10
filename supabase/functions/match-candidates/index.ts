@@ -86,13 +86,12 @@ serve(async (req) => {
 
     console.log("Fetching seeker profiles with CVs...");
 
-    // Get all seeker profiles with their CVs
+    // Get all seeker profiles
     const { data: seekers, error: seekersError } = await supabaseClient
       .from('seeker_profiles')
       .select(`
         *,
-        profiles!inner(id, full_name, email),
-        cvs(id, ai_analysis, ai_score)
+        profiles!inner(id, full_name, email)
       `);
 
     if (seekersError) {
@@ -106,6 +105,26 @@ serve(async (req) => {
       );
     }
 
+    // Get all CVs separately
+    const { data: cvs, error: cvsError } = await supabaseClient
+      .from('cvs')
+      .select('user_id, id, ai_analysis, ai_score');
+
+    if (cvsError) {
+      console.error("Error fetching CVs:", cvsError);
+    }
+
+    // Create a map of CVs by user_id for quick lookup
+    const cvsMap = new Map();
+    if (cvs) {
+      cvs.forEach((cv: any) => {
+        if (!cvsMap.has(cv.user_id)) {
+          cvsMap.set(cv.user_id, []);
+        }
+        cvsMap.get(cv.user_id).push(cv);
+      });
+    }
+
     console.log(`Found ${seekers.length} seekers, analyzing with AI...`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -114,17 +133,20 @@ serve(async (req) => {
     }
 
     // Prepare candidate data for AI analysis
-    const candidatesData = seekers.map((seeker: any) => ({
-      id: seeker.user_id,
-      name: seeker.profiles?.full_name || 'Unknown',
-      email: seeker.profiles?.email || '',
-      skills: seeker.skills || [],
-      experience_years: seeker.experience_years || 0,
-      location: seeker.location || 'Not specified',
-      bio: seeker.bio || '',
-      cv_analysis: seeker.cvs?.[0]?.ai_analysis || null,
-      cv_score: seeker.cvs?.[0]?.ai_score || 0,
-    }));
+    const candidatesData = seekers.map((seeker: any) => {
+      const userCvs = cvsMap.get(seeker.user_id) || [];
+      return {
+        id: seeker.user_id,
+        name: seeker.profiles?.full_name || 'Unknown',
+        email: seeker.profiles?.email || '',
+        skills: seeker.skills || [],
+        experience_years: seeker.experience_years || 0,
+        location: seeker.location || 'Not specified',
+        bio: seeker.bio || '',
+        cv_analysis: userCvs[0]?.ai_analysis || null,
+        cv_score: userCvs[0]?.ai_score || 0,
+      };
+    });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
