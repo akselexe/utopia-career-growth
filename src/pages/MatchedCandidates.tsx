@@ -211,15 +211,9 @@ const MatchedCandidates = () => {
           <Card className="p-12 text-center">
             <Sparkles className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Candidates Yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground">
               Click "Find Candidates" to get AI-powered candidate recommendations
             </p>
-            <Button
-              variant="link"
-              onClick={() => navigate('/seed-test-data')}
-            >
-              Need test data? Create test candidates →
-            </Button>
           </Card>
         )}
 
