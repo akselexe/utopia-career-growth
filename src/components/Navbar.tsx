@@ -1,8 +1,9 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, Briefcase, Shield } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 import { useState } from "react";
+import camalLogo from "@/assets/camal-logo.png";
 
 export const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -28,9 +29,8 @@ export const Navbar = () => {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
-              <Briefcase className="w-6 h-6 text-primary" />
-              <span className="font-bold text-lg">UtopiaHire</span>
+            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
+              <img src={camalLogo} alt="Camal" className="h-10" />
             </Link>
 
             {/* Navigation Links */}
@@ -76,9 +76,8 @@ export const Navbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center gap-2 text-foreground">
-              <Briefcase className="w-5 h-5 text-primary" />
-              <span className="font-bold">UtopiaHire</span>
+            <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
+              <img src={camalLogo} alt="Camal" className="h-8" />
             </Link>
 
             {/* Mobile Menu Button */}
