@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Shield } from "lucide-react";
 import { useState } from "react";
-import camalLogo from "@/assets/camal-logo.png";
+import threaamalLogo from "@/assets/3amal-logo.png";
 
 export const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -30,7 +30,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
-              <img src={camalLogo} alt="Camal" className="h-12" />
+              <img src={threaamalLogo} alt="3amal" className="h-12" />
             </Link>
 
             {/* Navigation Links */}
@@ -77,7 +77,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
-              <img src={camalLogo} alt="Camal" className="h-10" />
+              <img src={threaamalLogo} alt="3amal" className="h-10" />
             </Link>
 
             {/* Mobile Menu Button */}

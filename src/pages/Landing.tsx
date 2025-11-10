@@ -277,7 +277,7 @@ const Landing = () => {
               Ready to Get Started?
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Join professionals and companies using UtopiaHire to transform careers 
+              Join professionals and companies using 3amal to transform careers 
               and build exceptional teams
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
