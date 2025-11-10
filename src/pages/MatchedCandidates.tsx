@@ -25,6 +25,14 @@ interface Candidate {
   };
 }
 
+interface Job {
+  id: string;
+  title: string;
+  location: string;
+  description: string;
+  requirements: string;
+}
+
 const MatchedCandidates = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
@@ -33,7 +41,7 @@ const MatchedCandidates = () => {
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<Job | null>(null);
 
   useEffect(() => {
     if (user && jobId) {
@@ -66,15 +74,17 @@ const MatchedCandidates = () => {
 
   const handleFindCandidates = async () => {
     setMatching(true);
+    setCandidates([]);
+    
     try {
-      // Get the current session to ensure we have a valid auth token
+      // Verify session before calling
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
         throw new Error("Please sign in again to continue");
       }
 
-      console.log("Calling match-candidates with session");
+      console.log("Calling match-candidates with job:", jobId);
       
       const { data, error } = await supabase.functions.invoke('match-candidates', {
         body: { jobId }
@@ -82,17 +92,23 @@ const MatchedCandidates = () => {
 
       console.log("Match-candidates response:", { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function error:", error);
+        throw error;
+      }
 
       if (data?.error) {
         throw new Error(data.error);
       }
 
-      setCandidates(data.candidates || []);
+      const matchedCandidates = data?.candidates || [];
+      setCandidates(matchedCandidates);
       
       toast({
-        title: "Candidates Matched!",
-        description: `Found ${data.candidates?.length || 0} matching candidates`,
+        title: matchedCandidates.length > 0 ? "Candidates Matched!" : "No Matches Found",
+        description: matchedCandidates.length > 0 
+          ? `Found ${matchedCandidates.length} matching candidates`
+          : "Try creating test candidates first at /seed-test-data",
       });
     } catch (error) {
       console.error('Error matching candidates:', error);
@@ -126,6 +142,19 @@ const MatchedCandidates = () => {
     );
   }
 
+  if (!job) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Job Not Found</h2>
+          <Button onClick={() => navigate('/dashboard/company')}>
+            Back to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-16">
       <div className="container mx-auto px-4 py-8 space-y-6">
@@ -138,34 +167,46 @@ const MatchedCandidates = () => {
           Back to Dashboard
         </Button>
 
-        {job && (
-          <Card className="p-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">{job.title}</h1>
-                <p className="text-muted-foreground mt-2">{job.location}</p>
-              </div>
-              <Button
-                onClick={handleFindCandidates}
-                disabled={matching}
-                className="gap-2"
-              >
-                {matching ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Matching...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Find Candidates
-                  </>
-                )}
-              </Button>
+        {/* Job Info Card */}
+        <Card className="p-6 space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold">{job.title}</h1>
+              <p className="text-muted-foreground mt-2 flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {job.location}
+              </p>
             </div>
-          </Card>
-        )}
+            <Button
+              onClick={handleFindCandidates}
+              disabled={matching}
+              className="gap-2"
+              size="lg"
+            >
+              {matching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Matching...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Find Candidates
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="pt-4 border-t">
+            <h3 className="font-semibold mb-2">Job Description</h3>
+            <p className="text-sm text-muted-foreground">{job.description}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2">Requirements</h3>
+            <p className="text-sm text-muted-foreground">{job.requirements}</p>
+          </div>
+        </Card>
 
+        {/* Empty State */}
         {candidates.length === 0 && !matching && (
           <Card className="p-12 text-center">
             <Sparkles className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -173,21 +214,29 @@ const MatchedCandidates = () => {
             <p className="text-muted-foreground mb-4">
               Click "Find Candidates" to get AI-powered candidate recommendations
             </p>
+            <Button
+              variant="link"
+              onClick={() => navigate('/seed-test-data')}
+            >
+              Need test data? Create test candidates →
+            </Button>
           </Card>
         )}
 
+        {/* Candidates List */}
         <div className="space-y-4">
           {candidates.map((candidate) => (
             <Card key={candidate.candidate_id} className="p-6">
               <div className="space-y-4">
+                {/* Header */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <User className="w-6 h-6 text-primary" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-bold">{candidate.candidate.name}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Mail className="w-3 h-3" />
                           {candidate.candidate.email}
@@ -203,9 +252,9 @@ const MatchedCandidates = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <div className={`text-3xl font-bold ${getScoreColor(candidate.match_score)}`}>
-                      {candidate.match_score}
+                      {candidate.match_score}%
                     </div>
                     <Badge variant={getScoreBadgeVariant(candidate.match_score)} className="mt-1">
                       <Star className="w-3 h-3 mr-1" />
@@ -214,8 +263,10 @@ const MatchedCandidates = () => {
                   </div>
                 </div>
 
+                {/* Summary */}
                 <p className="text-muted-foreground">{candidate.summary}</p>
 
+                {/* Skills */}
                 {candidate.candidate.skills && candidate.candidate.skills.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {candidate.candidate.skills.map((skill, idx) => (
@@ -226,6 +277,7 @@ const MatchedCandidates = () => {
                   </div>
                 )}
 
+                {/* Strengths & Concerns */}
                 <div className="grid md:grid-cols-2 gap-4 pt-4 border-t">
                   <div>
                     <h4 className="font-semibold flex items-center gap-2 mb-2">
@@ -249,11 +301,6 @@ const MatchedCandidates = () => {
                       ))}
                     </ul>
                   </div>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button className="flex-1">Contact Candidate</Button>
-                  <Button variant="outline">View Full Profile</Button>
                 </div>
               </div>
             </Card>
