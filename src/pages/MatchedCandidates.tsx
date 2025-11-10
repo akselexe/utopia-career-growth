@@ -67,9 +67,20 @@ const MatchedCandidates = () => {
   const handleFindCandidates = async () => {
     setMatching(true);
     try {
+      // Get the current session to ensure we have a valid auth token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error("Please sign in again to continue");
+      }
+
+      console.log("Calling match-candidates with session");
+      
       const { data, error } = await supabase.functions.invoke('match-candidates', {
         body: { jobId }
       });
+
+      console.log("Match-candidates response:", { data, error });
 
       if (error) throw error;
 
