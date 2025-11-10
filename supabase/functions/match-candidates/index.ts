@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     console.log("Match candidates function called");
     
-    // Get the authorization header
+    // Get the JWT from the authorization header
     const authHeader = req.headers.get('Authorization');
     console.log("Auth header present:", !!authHeader);
     
@@ -26,19 +26,18 @@ serve(async (req) => {
       );
     }
 
-    // Create admin client with service role to verify the JWT
+    // Extract JWT token from "Bearer <token>"
+    const jwt = authHeader.replace('Bearer ', '');
+
+    // Create client with service role key to verify JWT
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log("Authenticating user...");
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    console.log("Verifying JWT token...");
+    // Pass the JWT token directly to getUser
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(jwt);
     
     if (authError) {
       console.error("Auth error:", authError);
