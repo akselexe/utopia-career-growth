@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, Trash2 } from "lucide-react";
+import { Loader2, Eye, Trash2, MapPin, Briefcase, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -95,24 +95,37 @@ export const JobsList = ({ userId, onJobsChange }: { userId?: string; onJobsChan
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {jobs.map((job) => (
         <div
           key={job.id}
-          className="p-4 rounded-lg border bg-card hover:shadow-md transition-all"
+          className="p-6 rounded-lg border bg-card hover:shadow-md transition-all"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-lg font-semibold">{job.title}</h3>
+              <div className="flex items-center gap-3 mb-3">
+                <h3 className="text-lg font-semibold text-foreground">{job.title}</h3>
                 <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
                   {job.status}
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span>📍 {job.location}</span>
-                <span>💼 {job.job_type}</span>
-                <span>📅 {new Date(job.created_at).toLocaleDateString()}</span>
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>{job.location}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4" />
+                  <span className="capitalize">{job.job_type.replace('-', ' ')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  <span>{new Date(job.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}</span>
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
@@ -127,8 +140,9 @@ export const JobsList = ({ userId, onJobsChange }: { userId?: string; onJobsChan
               </Button>
               <Button
                 size="sm"
-                variant="destructive"
+                variant="ghost"
                 onClick={() => handleDeleteJob(job.id)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
