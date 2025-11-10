@@ -30,7 +30,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
-              <img src={camalLogo} alt="Camal" className="h-10" />
+              <img src={camalLogo} alt="Camal" className="h-12" />
             </Link>
 
             {/* Navigation Links */}
@@ -77,7 +77,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-opacity">
-              <img src={camalLogo} alt="Camal" className="h-8" />
+              <img src={camalLogo} alt="Camal" className="h-10" />
             </Link>
 
             {/* Mobile Menu Button */}
