@@ -12,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Match candidates function called");
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -22,15 +24,29 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    console.log("Authenticating user...");
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Authentication failed", details: authError.message }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     if (!user) {
+      console.error("No user found");
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log("User authenticated:", user.id);
+
     const { jobId } = await req.json();
+    console.log("Job ID:", jobId);
 
     if (!jobId) {
       return new Response(
@@ -224,8 +240,12 @@ ${JSON.stringify(candidatesData, null, 2)}`
 
   } catch (error) {
     console.error("Error in match-candidates:", error);
+    console.error("Error details:", error instanceof Error ? error.stack : String(error));
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Unknown error",
+        details: error instanceof Error ? error.stack : String(error)
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
