@@ -13,7 +13,7 @@ const CompanyDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [stats, setStats] = useState({ jobs: 0, applications: 0, active_jobs: 0 });
+  const [stats, setStats] = useState({ totalJobs: 0, applications: 0, activeJobs: 0 });
   const [loading, setLoading] = useState(true);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
@@ -46,9 +46,9 @@ const CompanyDashboard = () => {
       if (appsError) throw appsError;
 
       setStats({
-        jobs: jobs?.length || 0,
+        totalJobs: jobs?.length || 0,
         applications: applicationsCount || 0,
-        active_jobs: activeJobs,
+        activeJobs: activeJobs,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -73,95 +73,99 @@ const CompanyDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-16">
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">Company Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage your job postings and find the perfect candidates
-            </p>
+    <div className="min-h-screen bg-background pt-16">
+      <main className="container mx-auto px-6 py-8">
+        {/* Hero Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Company Dashboard</h1>
+              <p className="text-muted-foreground text-lg">Manage your job postings and find top talent</p>
+            </div>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
-          <Button variant="outline" onClick={handleSignOut} className="gap-2">
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Jobs</p>
-                <p className="text-2xl font-bold">{stats.jobs}</p>
-              </div>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground">Total Jobs Posted</p>
+              <Briefcase className="w-5 h-5 text-muted-foreground" />
             </div>
+            <p className="text-3xl font-bold">{stats.totalJobs}</p>
+            <p className="text-xs text-muted-foreground mt-1">All time</p>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-green-500/10">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active Jobs</p>
-                <p className="text-2xl font-bold">{stats.active_jobs}</p>
-              </div>
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground">Active Jobs</p>
+              <TrendingUp className="w-5 h-5 text-muted-foreground" />
             </div>
+            <p className="text-3xl font-bold">{stats.activeJobs}</p>
+            <p className="text-xs text-muted-foreground mt-1">Currently open</p>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-blue-500/10">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Applications</p>
-                <p className="text-2xl font-bold">{stats.applications}</p>
-              </div>
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground">Total Applications</p>
+              <FileText className="w-5 h-5 text-muted-foreground" />
             </div>
+            <p className="text-3xl font-bold">{stats.applications}</p>
+            <p className="text-xs text-muted-foreground mt-1">Received</p>
           </Card>
         </div>
 
-        {/* Post New Job */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">Post a New Job</h2>
+        {/* Post Job Card */}
+        <Card className="p-8 mb-8 border-2 hover-lift">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Plus className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-1">Post a New Job</h2>
+                <p className="text-sm text-muted-foreground">Create a new job listing and let AI find the perfect candidates for you</p>
+              </div>
+            </div>
             <PostJobDialog
               isOpen={isPostDialogOpen}
               onOpenChange={setIsPostDialogOpen}
               onSuccess={handleJobPosted}
               userId={user?.id}
             >
-              <Button className="gap-2">
+              <Button size="lg" className="gap-2">
                 <Plus className="w-4 h-4" />
                 Post Job
               </Button>
             </PostJobDialog>
           </div>
-          <p className="text-muted-foreground">
-            Create job postings and let AI match the best candidates for you
-          </p>
         </Card>
 
-        {/* Active Jobs List */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold mb-4">Your Active Jobs</h2>
+        {/* Jobs List */}
+        <Card className="p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Briefcase className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Your Job Postings</h2>
+              <p className="text-sm text-muted-foreground">Manage and track your active job listings</p>
+            </div>
+          </div>
           <JobsList userId={user?.id} onJobsChange={loadStats} />
         </Card>
-      </div>
+      </main>
     </div>
   );
 };
