@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Separator } from "@/components/ui/separator";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -30,6 +31,8 @@ interface PostJobDialogProps {
 export const PostJobDialog = ({ children, isOpen, onOpenChange, onSuccess, userId }: PostJobDialogProps) => {
   const { toast } = useToast();
   const [isPosting, setIsPosting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     title: "",
@@ -45,6 +48,60 @@ export const PostJobDialog = ({ children, isOpen, onOpenChange, onSuccess, userI
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!aiPrompt.trim() || aiPrompt.trim().length < 20) {
+      toast({
+        title: "Invalid prompt",
+        description: "Please provide at least 20 characters describing the job",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-job-description', {
+        body: { description: aiPrompt }
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const jobData = data.jobData;
+      setFormData({
+        title: jobData.title || "",
+        location: jobData.location || "",
+        salaryMin: jobData.salaryMin ? String(jobData.salaryMin) : "",
+        salaryMax: jobData.salaryMax ? String(jobData.salaryMax) : "",
+        description: jobData.description || "",
+        requirements: jobData.requirements || "",
+        jobType: formData.jobType,
+      });
+
+      toast({
+        title: "Success!",
+        description: "Job details generated. Review and adjust as needed.",
+      });
+    } catch (error) {
+      console.error('Error generating job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate job details. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -111,7 +168,51 @@ export const PostJobDialog = ({ children, isOpen, onOpenChange, onSuccess, userI
         <DialogHeader>
           <DialogTitle>Post a New Job</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* AI Generation Section */}
+          <div className="space-y-3 p-4 rounded-lg border bg-accent/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <Label className="text-base font-semibold">Generate with AI</Label>
+            </div>
+            <Textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Describe the job you want to post. For example: 'Looking for a senior React developer with 5+ years experience for our startup in San Francisco. Remote work possible. Salary range 120k-160k. Must know TypeScript, Next.js, and have experience with cloud platforms.'"
+              rows={3}
+              className="resize-none"
+            />
+            <Button
+              onClick={handleGenerateWithAI}
+              disabled={isGenerating || !aiPrompt.trim()}
+              className="w-full gap-2"
+              variant="secondary"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generate Job Details
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or fill manually</span>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
           <div>
             <Label htmlFor="title">Job Title *</Label>
             <Input
@@ -196,6 +297,7 @@ export const PostJobDialog = ({ children, isOpen, onOpenChange, onSuccess, userI
             onClick={handlePostJob}
             disabled={isPosting}
             className="w-full"
+            size="lg"
           >
             {isPosting ? (
               <>
@@ -206,6 +308,7 @@ export const PostJobDialog = ({ children, isOpen, onOpenChange, onSuccess, userI
               "Post Job"
             )}
           </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
