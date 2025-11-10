@@ -374,14 +374,18 @@ export type Database = {
       seeker_profiles: {
         Row: {
           bio: string | null
+          certifications: string | null
           created_at: string | null
           desired_salary_max: number | null
           desired_salary_min: number | null
+          education: string | null
           experience_years: number | null
           github_url: string | null
           id: string
+          job_preferences: string | null
           linkedin_url: string | null
           location: string | null
+          phone: string | null
           portfolio_url: string | null
           skills: string[] | null
           twitter_url: string | null
@@ -390,14 +394,18 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          certifications?: string | null
           created_at?: string | null
           desired_salary_max?: number | null
           desired_salary_min?: number | null
+          education?: string | null
           experience_years?: number | null
           github_url?: string | null
           id?: string
+          job_preferences?: string | null
           linkedin_url?: string | null
           location?: string | null
+          phone?: string | null
           portfolio_url?: string | null
           skills?: string[] | null
           twitter_url?: string | null
@@ -406,14 +414,18 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          certifications?: string | null
           created_at?: string | null
           desired_salary_max?: number | null
           desired_salary_min?: number | null
+          education?: string | null
           experience_years?: number | null
           github_url?: string | null
           id?: string
+          job_preferences?: string | null
           linkedin_url?: string | null
           location?: string | null
+          phone?: string | null
           portfolio_url?: string | null
           skills?: string[] | null
           twitter_url?: string | null
