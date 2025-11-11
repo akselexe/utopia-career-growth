@@ -171,7 +171,7 @@ const ProfileSettings = () => {
           job_preferences: validatedData.job_preferences || null,
           education: validatedData.education || null,
           certifications: validatedData.certifications || null,
-        });
+        }, { onConflict: 'user_id' });
 
       if (seekerError) throw seekerError;
 
