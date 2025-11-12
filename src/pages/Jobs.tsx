@@ -212,7 +212,7 @@ const Jobs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pt-20 md:pt-24">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">Browse Jobs</h1>

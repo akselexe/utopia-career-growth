@@ -152,7 +152,7 @@ export default function PrivacySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 pt-20 md:pt-24">
       <Navbar />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
