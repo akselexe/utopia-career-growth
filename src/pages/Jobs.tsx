@@ -218,7 +218,7 @@ const Jobs = () => {
           <h1 className="text-4xl font-bold mb-2">Browse Jobs</h1>
           <p className="text-muted-foreground text-lg">
             {matchedJobs.length > 0 
-              ? `${matchedJobs.length} AI-matched jobs found for you`
+              ? `${matchedJobs.length} matched jobs found for you`
               : "Find your next opportunity"
             }
           </p>
