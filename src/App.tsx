@@ -17,6 +17,7 @@ import MatchedCandidates from "./pages/MatchedCandidates";
 import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
 import ProfileSettings from "./pages/ProfileSettings";
+import PrivacySettings from "./pages/PrivacySettings";
 import FootprintScanner from "./pages/FootprintScanner";
 import Notifications from "./pages/Notifications";
 import SeedTestData from "./pages/SeedTestData";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/cv-review" element={<CVReview />} />
             <Route path="/ai-interview" element={<AIInterviewPage />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
+            <Route path="/privacy-settings" element={<PrivacySettings />} />
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/seed-test-data" element={<SeedTestData />} />
