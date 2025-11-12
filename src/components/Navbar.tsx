@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Shield, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
-import threaamalLogo from "@/assets/3amal-logo.png";
+import amalLogo from "@/assets/3amal-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar = () => {
@@ -76,7 +76,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-all duration-300 hover:scale-105">
-              <img src={threaamalLogo} alt="3amal" className="h-14" />
+              <img src={amalLogo} alt="3amal" className="h-14" />
             </Link>
 
             {/* Navigation Links */}
@@ -145,7 +145,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to={userRole === "seeker" ? "/dashboard/seeker" : "/dashboard/company"} className="flex items-center hover:opacity-80 transition-all duration-300">
-              <img src={threaamalLogo} alt="3amal" className="h-12" />
+              <img src={amalLogo} alt="3amal" className="h-12" />
             </Link>
 
             {/* Mobile Menu Button */}
