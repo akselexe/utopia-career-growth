@@ -14,11 +14,6 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const userRole = user?.user_metadata?.user_type;
-  
-  // Don't show navbar on landing and auth pages
-  if (location.pathname === "/" || location.pathname === "/auth") {
-    return null;
-  }
 
   // Load unread notifications count for seekers
   useEffect(() => {
@@ -62,6 +57,11 @@ export const Navbar = () => {
       console.error('Error loading unread count:', error);
     }
   };
+  
+  // Don't show navbar on landing and auth pages
+  if (location.pathname === "/" || location.pathname === "/auth") {
+    return null;
+  }
 
   const handleSignOut = async () => {
     await signOut();
