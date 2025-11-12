@@ -23,6 +23,7 @@ interface Job {
   created_at: string;
   match_score?: number;
   skills_required?: string[];
+  currency?: string;
 }
 
 const Jobs = () => {
@@ -157,6 +158,19 @@ const Jobs = () => {
     );
   };
 
+  const formatSalary = (amount: number, currency: string = 'USD') => {
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `${currency} ${amount.toLocaleString()}`;
+    }
+  };
+
   const handleApply = async (jobId: string) => {
     if (!user) return;
 
@@ -269,7 +283,7 @@ const Jobs = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4" />
-                        ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                        {formatSalary(job.salary_min, job.currency)} - {formatSalary(job.salary_max, job.currency)}
                       </span>
                       {job.job_type && (
                         <Badge variant="secondary">{job.job_type}</Badge>
@@ -351,7 +365,7 @@ const Jobs = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4" />
-                        ${job.salary_min?.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                        {formatSalary(job.salary_min, job.currency)} - {formatSalary(job.salary_max, job.currency)}
                       </span>
                       {job.job_type && (
                         <Badge variant="secondary">{job.job_type}</Badge>
