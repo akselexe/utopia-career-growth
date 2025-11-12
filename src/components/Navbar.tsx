@@ -38,13 +38,22 @@ export const Navbar = () => {
               <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                 Jobs
               </Link>
-              {userRole === "seeker" && (
+              {userRole === "seeker" ? (
                 <>
                   <Link to="/cv-review" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     CV Review
                   </Link>
                   <Link to="/ai-interview" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     AI Interview
+                  </Link>
+                </>
+              ) : userRole === "company" && (
+                <>
+                  <Link to="/applicants" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    Applicants
+                  </Link>
+                  <Link to="/company-profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    Company Profile
                   </Link>
                 </>
               )}
@@ -100,7 +109,7 @@ export const Navbar = () => {
                 >
                   Jobs
                 </Link>
-                {userRole === "seeker" && (
+                {userRole === "seeker" ? (
                   <>
                     <Link
                       to="/cv-review"
@@ -115,6 +124,23 @@ export const Navbar = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       AI Interview
+                    </Link>
+                  </>
+                ) : userRole === "company" && (
+                  <>
+                    <Link
+                      to="/applicants"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Applicants
+                    </Link>
+                    <Link
+                      to="/company-profile"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Company Profile
                     </Link>
                   </>
                 )}

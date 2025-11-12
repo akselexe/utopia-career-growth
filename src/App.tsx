@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Jobs from "./pages/Jobs";
 import SeekerDashboard from "./pages/SeekerDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
+import Applicants from "./pages/Applicants";
+import CompanyProfile from "./pages/CompanyProfile";
 import MatchedJobs from "./pages/MatchedJobs";
 import MatchedCandidates from "./pages/MatchedCandidates";
 import CVReview from "./pages/CVReview";
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
             <Route path="/dashboard/company" element={<CompanyDashboard />} />
+            <Route path="/applicants" element={<Applicants />} />
+            <Route path="/company-profile" element={<CompanyProfile />} />
             <Route path="/matched-jobs" element={<MatchedJobs />} />
             <Route path="/matched-candidates/:jobId" element={<MatchedCandidates />} />
             <Route path="/cv-review" element={<CVReview />} />
