@@ -72,9 +72,14 @@ const MatchedCandidates = () => {
     }
   };
 
-  const handleFindCandidates = async () => {
+  const handleFindCandidates = async (retryCount = 0) => {
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY = 3000; // 3 seconds
+    
     setMatching(true);
-    setCandidates([]);
+    if (retryCount === 0) {
+      setCandidates([]);
+    }
     
     try {
       // Verify session before calling
@@ -91,6 +96,21 @@ const MatchedCandidates = () => {
       });
 
       console.log("Match-candidates response:", { data, error });
+
+      // Handle rate limit errors specifically
+      if (error?.message?.includes('429') || data?.error?.includes('Rate limit')) {
+        if (retryCount < MAX_RETRIES) {
+          toast({
+            title: "Rate Limit Hit",
+            description: `Too many requests. Retrying in ${RETRY_DELAY / 1000} seconds... (Attempt ${retryCount + 1}/${MAX_RETRIES})`,
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+          return handleFindCandidates(retryCount + 1);
+        } else {
+          throw new Error("The AI service is currently experiencing high traffic. Please try again in a few minutes.");
+        }
+      }
 
       if (error) {
         console.error("Function error:", error);
@@ -114,7 +134,7 @@ const MatchedCandidates = () => {
       console.error('Error matching candidates:', error);
       toast({
         title: "Matching Failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        description: error instanceof Error ? error.message : "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -178,7 +198,7 @@ const MatchedCandidates = () => {
               </p>
             </div>
             <Button
-              onClick={handleFindCandidates}
+              onClick={() => handleFindCandidates()}
               disabled={matching}
               className="gap-2"
               size="lg"
