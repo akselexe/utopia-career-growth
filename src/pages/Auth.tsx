@@ -144,7 +144,7 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6">
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold text-center">Welcome to 3amal</h1>
+          <h1 className="text-2xl font-bold text-center">WELCOME</h1>
           <div className="flex gap-4">
             <Button
               variant={userType === "seeker" ? "default" : "outline"}

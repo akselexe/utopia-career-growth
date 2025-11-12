@@ -221,7 +221,7 @@ const SeekerDashboard = () => {
         <main className="container mx-auto px-6 py-8">
           {/* Hero Section */}
           <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">Career Insights Dashboard</h1>
+            <h1 className="text-4xl font-bold mb-2">DASHBOARD</h1>
             <p className="text-muted-foreground text-lg">Strategic analysis for your career development</p>
           </div>
 
@@ -242,7 +242,7 @@ const SeekerDashboard = () => {
                 <Target className="w-5 h-5 text-muted-foreground" />
               </div>
               <p className="text-3xl font-bold">{stats.matches}</p>
-              <p className="text-xs text-muted-foreground mt-1">≥70% match score</p>
+              <p className="text-xs text-muted-foreground mt-1">Match score</p>
             </Card>
 
             <Card className="p-6 hover:shadow-lg transition-shadow">
