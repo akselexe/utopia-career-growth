@@ -35,11 +35,11 @@ export const Navbar = () => {
 
             {/* Navigation Links */}
             <div className="flex items-center gap-6">
-              <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
-                Jobs
-              </Link>
-              {userRole === "seeker" ? (
+              {userRole === "seeker" && (
                 <>
+                  <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
+                    Jobs
+                  </Link>
                   <Link to="/cv-review" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     CV Review
                   </Link>
@@ -47,7 +47,8 @@ export const Navbar = () => {
                     AI Interview
                   </Link>
                 </>
-              ) : userRole === "company" && (
+              )}
+              {userRole === "company" && (
                 <>
                   <Link to="/applicants" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     Applicants
@@ -61,11 +62,13 @@ export const Navbar = () => {
 
             {/* User Section */}
             <div className="flex items-center gap-3">
-              <Link to="/profile-settings">
-                <Button variant="ghost" size="sm">
-                  Profile
-                </Button>
-              </Link>
+              {userRole === "seeker" && (
+                <Link to="/profile-settings">
+                  <Button variant="ghost" size="sm">
+                    Profile
+                  </Button>
+                </Link>
+              )}
               <Link to="/privacy-settings">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <Shield className="h-4 w-4" />
@@ -102,15 +105,15 @@ export const Navbar = () => {
           {isOpen && (
             <div className="border-t border-border/40 py-4">
               <div className="flex flex-col gap-3">
-                <Link
-                  to="/jobs"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Jobs
-                </Link>
-                {userRole === "seeker" ? (
+                {userRole === "seeker" && (
                   <>
+                    <Link
+                      to="/jobs"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Jobs
+                    </Link>
                     <Link
                       to="/cv-review"
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
@@ -126,7 +129,8 @@ export const Navbar = () => {
                       AI Interview
                     </Link>
                   </>
-                ) : userRole === "company" && (
+                )}
+                {userRole === "company" && (
                   <>
                     <Link
                       to="/applicants"
@@ -144,13 +148,15 @@ export const Navbar = () => {
                     </Link>
                   </>
                 )}
-                <Link
-                  to="/profile-settings"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Profile
-                </Link>
+                {userRole === "seeker" && (
+                  <Link
+                    to="/profile-settings"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                )}
                 <Link
                   to="/privacy-settings"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2 flex items-center gap-2"
