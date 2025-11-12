@@ -822,7 +822,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
               <Mic className="w-8 h-8 text-accent" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-bold">Voice-Only AI Interview</h3>
+              <h3 className="font-bold">AI INTERVIEWER</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Speak naturally with our AI interviewer. Camera tracks your body language and facial expressions for behavioral feedback.
               </p>
