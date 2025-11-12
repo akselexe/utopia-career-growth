@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Users, FileText, TrendingUp, Plus, LogOut } from "lucide-react";
+import { Briefcase, FileText, TrendingUp, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { PostJobDialog } from "@/components/company/PostJobDialog";
 import { JobsList } from "@/components/company/JobsList";
 
 const CompanyDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState({ totalJobs: 0, applications: 0, activeJobs: 0 });
@@ -66,11 +66,6 @@ const CompanyDashboard = () => {
     });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -84,16 +79,8 @@ const CompanyDashboard = () => {
       <main className="container mx-auto px-6 py-8">
         {/* Hero Section */}
         <div className="mb-12">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Company Dashboard</h1>
-              <p className="text-muted-foreground text-lg">Manage your job postings and find top talent</p>
-            </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
+          <h1 className="text-4xl font-bold mb-2">Company Dashboard</h1>
+          <p className="text-muted-foreground text-lg">Manage your job postings and find top talent</p>
         </div>
 
         {/* Stats Overview */}
