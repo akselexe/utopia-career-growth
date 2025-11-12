@@ -18,7 +18,7 @@ import CVReview from "./pages/CVReview";
 import AIInterviewPage from "./pages/AIInterviewPage";
 import ProfileSettings from "./pages/ProfileSettings";
 import FootprintScanner from "./pages/FootprintScanner";
-import PrivacySettings from "./pages/PrivacySettings";
+import Notifications from "./pages/Notifications";
 import SeedTestData from "./pages/SeedTestData";
 import NotFound from "./pages/NotFound";
 
@@ -46,7 +46,7 @@ const App = () => (
             <Route path="/ai-interview" element={<AIInterviewPage />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
-            <Route path="/privacy-settings" element={<PrivacySettings />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/seed-test-data" element={<SeedTestData />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

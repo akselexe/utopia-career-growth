@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, User, Mail, MapPin, Briefcase, Star, CheckCircle2, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ContactCandidateDialog } from "@/components/company/ContactCandidateDialog";
 
 interface Candidate {
   candidate_id: string;
@@ -33,6 +34,10 @@ interface Job {
   requirements: string;
 }
 
+interface CompanyProfile {
+  company_name: string;
+}
+
 const MatchedCandidates = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
@@ -42,12 +47,29 @@ const MatchedCandidates = () => {
   const [matching, setMatching] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [job, setJob] = useState<Job | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   useEffect(() => {
     if (user && jobId) {
       loadJobDetails();
+      loadCompanyProfile();
     }
   }, [user, jobId]);
+
+  const loadCompanyProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('company_profiles')
+        .select('company_name')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      setCompanyProfile(data);
+    } catch (error) {
+      console.error('Error loading company profile:', error);
+    }
+  };
 
   const loadJobDetails = async () => {
     try {
@@ -266,7 +288,13 @@ const MatchedCandidates = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right flex-shrink-0 flex flex-col gap-2">
+                    <ContactCandidateDialog
+                      candidateEmail={candidate.candidate.email}
+                      candidateName={candidate.candidate.name}
+                      jobTitle={job?.title}
+                      companyName={companyProfile?.company_name || "Our Company"}
+                    />
                     <div className={`text-3xl font-bold ${getScoreColor(candidate.match_score)}`}>
                       {candidate.match_score}%
                     </div>

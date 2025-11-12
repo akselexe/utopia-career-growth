@@ -1,21 +1,67 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, Shield } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Shield, Bell } from "lucide-react";
+import { useState, useEffect } from "react";
 import threaamalLogo from "@/assets/3amal-logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const userRole = user?.user_metadata?.user_type;
   
   // Don't show navbar on landing and auth pages
   if (location.pathname === "/" || location.pathname === "/auth") {
     return null;
   }
+
+  // Load unread notifications count for seekers
+  useEffect(() => {
+    if (user && userRole === "seeker") {
+      loadUnreadCount();
+      
+      // Subscribe to real-time updates
+      const channel = supabase
+        .channel('notifications-count')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            loadUnreadCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, userRole]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user?.id)
+        .eq('read', false);
+
+      if (error) throw error;
+      setUnreadCount(count || 0);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -45,6 +91,16 @@ export const Navbar = () => {
                   </Link>
                   <Link to="/ai-interview" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
                     AI Interview
+                  </Link>
+                  <Link to="/notifications" className="relative">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <Bell className="h-4 w-4" />
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </Button>
                   </Link>
                 </>
               )}
@@ -127,6 +183,19 @@ export const Navbar = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       AI Interview
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium px-4 py-2 flex items-center gap-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Bell className="h-4 w-4" />
+                      Notifications
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </Link>
                   </>
                 )}

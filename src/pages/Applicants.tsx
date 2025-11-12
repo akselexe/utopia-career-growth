@@ -7,6 +7,7 @@ import { Users, Mail, FileText, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ContactCandidateDialog } from "@/components/company/ContactCandidateDialog";
 
 interface Application {
   id: string;
@@ -25,12 +26,17 @@ interface Application {
   };
 }
 
+interface CompanyProfile {
+  company_name: string;
+}
+
 const Applicants = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -38,7 +44,23 @@ const Applicants = () => {
       return;
     }
     loadApplications();
+    loadCompanyProfile();
   }, [user]);
+
+  const loadCompanyProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('company_profiles')
+        .select('company_name')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      setCompanyProfile(data);
+    } catch (error) {
+      console.error('Error loading company profile:', error);
+    }
+  };
 
   const loadApplications = async () => {
     try {
@@ -207,6 +229,12 @@ const Applicants = () => {
                   </div>
 
                   <div className="flex flex-col gap-2">
+                    <ContactCandidateDialog
+                      candidateEmail={application.seeker.email}
+                      candidateName={application.seeker.full_name}
+                      jobTitle={application.job.title}
+                      companyName={companyProfile?.company_name || "Our Company"}
+                    />
                     {application.status === 'pending' && (
                       <>
                         <Button
