@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "3amal Recruitment <onboarding@resend.dev>",
+        from: "3amal Recruitment <ma0213662@gmail.com>", // Using your verified email for testing
         to: [candidateEmail],
         reply_to: user.email,
         subject: subject,
