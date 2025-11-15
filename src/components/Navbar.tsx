@@ -20,7 +20,7 @@ export const Navbar = () => {
     if (user && userRole === "seeker") {
       loadUnreadCount();
       
-      // Subscribe to real-time updates
+      
       const channel = supabase
         .channel('notifications-count')
         .on(
