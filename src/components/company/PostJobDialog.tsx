@@ -19,7 +19,7 @@ const jobSchema = z.object({
   requirements: z.string().min(20, "Requirements must be at least 20 characters"),
   jobType: z.string().min(1, "Job type is required"),
 });
-
+// A dialog component that allows a company to post a new job, with optional AI-generated job details.
 interface PostJobDialogProps {
   children: ReactNode;
   isOpen: boolean;

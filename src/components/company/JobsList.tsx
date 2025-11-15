@@ -14,7 +14,7 @@ interface Job {
   status: string;
   created_at: string;
 }
-
+// A component that lists jobs posted by a company, allowing them to view matched candidates and delete jobs.
 export const JobsList = ({ userId, onJobsChange }: { userId?: string; onJobsChange?: () => void }) => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);

@@ -14,7 +14,7 @@ interface ContactCandidateDialogProps {
   jobTitle?: string;
   companyName: string;
 }
-
+// A dialog component that allows a company to contact a candidate via email.
 export const ContactCandidateDialog = ({
   candidateEmail,
   candidateName,

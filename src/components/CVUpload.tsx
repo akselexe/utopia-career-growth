@@ -244,7 +244,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
       throw new Error('Failed to extract text from PDF. Please try a different file format.');
     }
   };
-
+// Handle CV file upload and analysis
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -260,7 +260,7 @@ export const CVUpload = ({ userId }: { userId: string }) => {
       return;
     }
 
-    // Validate file size (max 5MB)
+    // Validate file size 
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",

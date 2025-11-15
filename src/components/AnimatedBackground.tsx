@@ -15,16 +15,16 @@ export const AnimatedBackground = () => {
   const [stars, setStars] = useState<Star[]>([]);
 
   useEffect(() => {
-    // Generate 150 stars with random positions and properties
+    
     const generatedStars = Array.from({ length: 150 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: Math.random() * 2 + 1, // 1-3px
+      size: Math.random() * 2 + 1, 
       animationDelay: Math.random() * 3,
-      animationDuration: Math.random() * 3 + 2, // 2-5s
-      moveDistance: Math.random() * 50 + 20, // 20-70px movement
-      moveDirection: Math.random() * 360, // Random direction in degrees
+      animationDuration: Math.random() * 3 + 2, 
+      moveDistance: Math.random() * 50 + 20, 
+      moveDirection: Math.random() * 360, 
     }));
     setStars(generatedStars);
   }, []);

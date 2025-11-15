@@ -485,7 +485,7 @@ export const AIInterview = ({ userId }: { userId: string }) => {
       });
 
       try {
-        // Start recording without time slices for simplicity
+        
         mediaRecorder.start();
         mediaRecorderRef.current = mediaRecorder;
         setIsRecording(true);

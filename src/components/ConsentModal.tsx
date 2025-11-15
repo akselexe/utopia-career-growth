@@ -16,7 +16,7 @@ interface ConsentModalProps {
   onDecline: () => void;
   type: "behavioral" | "footprint";
 }
-
+// A modal dialog that requests user consent for either behavioral analysis during interviews or public profile scanning.
 export default function ConsentModal({ open, onConsent, onDecline, type }: ConsentModalProps) {
   const content = {
     behavioral: {
