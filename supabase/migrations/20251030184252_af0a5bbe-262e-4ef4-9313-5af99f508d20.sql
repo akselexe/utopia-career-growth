@@ -18,6 +18,7 @@ CREATE TABLE profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+
 -- Create seeker_profiles table for additional job seeker data
 CREATE TABLE seeker_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

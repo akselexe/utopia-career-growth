@@ -94,7 +94,7 @@ const Landing = () => {
             <ul className="space-y-2">
               <li className="flex items-start gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-                <span>ATS-friendly formatting</span>
+                <span>ATS friendly formatting</span>
               </li>
               <li className="flex items-start gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
@@ -171,7 +171,7 @@ const Landing = () => {
               Build Your Team
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Find and hire top talent with AI-powered candidate matching
+              Find and hire top talent with AI powered candidate matching
             </p>
           </div>
           
@@ -204,7 +204,7 @@ const Landing = () => {
               </div>
               <h3 className="text-xl font-bold">Diversity Insights</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Build diverse teams with data-driven insights and 
+                Build diverse teams with data driven insights and 
                 bias-free hiring recommendations.
               </p>
             </Card>

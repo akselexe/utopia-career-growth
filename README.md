@@ -22,7 +22,7 @@ Follow these steps to set up the project:
    npm run dev
    ```
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 This project is built with:
 

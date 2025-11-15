@@ -5,7 +5,7 @@ import { CVUpload } from "@/components/CVUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-
+// upload and review cv
 const CVReview = () => {
   const { user } = useAuth();
   const navigate = useNavigate();

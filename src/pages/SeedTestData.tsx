@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
+// for test data
 const SeedTestData = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);

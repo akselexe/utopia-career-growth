@@ -64,7 +64,7 @@ const Applicants = () => {
 
   const loadApplications = async () => {
     try {
-      // First get all company jobs
+      // get all company jobs
       const { data: jobs, error: jobsError } = await supabase
         .from('jobs')
         .select('id')
@@ -80,7 +80,7 @@ const Applicants = () => {
         return;
       }
 
-      // Then get all applications for those jobs
+      // get all applications for those jobs
       const { data: apps, error: appsError } = await supabase
         .from('applications')
         .select(`

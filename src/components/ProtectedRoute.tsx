@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
   children: ReactNode;
   requiredUserType?: 'seeker' | 'company';
 }
-
+// A component that protects routes based on authentication and user type
 export const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
 

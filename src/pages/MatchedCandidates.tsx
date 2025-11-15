@@ -96,7 +96,7 @@ const MatchedCandidates = () => {
 
   const handleFindCandidates = async (retryCount = 0) => {
     const MAX_RETRIES = 2;
-    const RETRY_DELAY = 3000; // 3 seconds
+    const RETRY_DELAY = 3000; 
     
     setMatching(true);
     if (retryCount === 0) {
@@ -104,7 +104,7 @@ const MatchedCandidates = () => {
     }
     
     try {
-      // Verify session before calling
+      // Verify the session before calling
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
@@ -119,7 +119,7 @@ const MatchedCandidates = () => {
 
       console.log("Match-candidates response:", { data, error });
 
-      // Handle rate limit errors specifically
+      // Handle rate limit errors 
       if (error?.message?.includes('429') || data?.error?.includes('Rate limit')) {
         if (retryCount < MAX_RETRIES) {
           toast({

@@ -1,6 +1,7 @@
 -- Add currency field to jobs table
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS currency text DEFAULT 'USD';
 
+
 -- Update existing jobs with realistic salaries and proper currencies based on location
 -- North African countries
 UPDATE jobs SET 

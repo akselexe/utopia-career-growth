@@ -62,7 +62,7 @@ const Jobs = () => {
         setUserLocation(profile.location);
       }
 
-      // Fetch all active jobs
+      // Fetch active jobs
       const { data: allJobs, error } = await supabase
         .from('jobs')
         .select('*')

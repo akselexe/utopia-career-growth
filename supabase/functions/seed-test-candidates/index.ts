@@ -191,7 +191,7 @@ serve(async (req) => {
 
       console.log(`User created with ID: ${authData.user.id}`);
 
-      // Create seeker profile
+      // Create profile
       const { error: profileError } = await supabaseAdmin
         .from('seeker_profiles')
         .insert({

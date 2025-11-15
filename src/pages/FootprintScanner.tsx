@@ -95,7 +95,7 @@ const FootprintScanner = () => {
     setAnalysis(null);
 
     try {
-      // Fetch GitHub data
+      // GitHub
       let ghData = null;
       if (usernameToUse) {
         const { data: githubResult, error: githubError } = await supabase.functions.invoke('fetch-github-profile', {
@@ -115,7 +115,7 @@ const FootprintScanner = () => {
         }
       }
 
-      // Fetch StackOverflow data
+      // StackOverflow
       let soData = null;
       if (idToUse) {
         const { data: soResult, error: soError } = await supabase.functions.invoke('fetch-stackoverflow-profile', {

@@ -17,6 +17,7 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS handle_new_user();
 DROP FUNCTION IF EXISTS update_updated_at_column();
 
+
 -- Create enums
 CREATE TYPE user_type AS ENUM ('seeker', 'company');
 CREATE TYPE job_status AS ENUM ('active', 'closed', 'draft');

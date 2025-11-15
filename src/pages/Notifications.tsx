@@ -28,7 +28,7 @@ const Notifications = () => {
     if (user) {
       loadNotifications();
       
-      // Subscribe to real-time updates
+      
       const channel = supabase
         .channel('notifications-changes')
         .on(

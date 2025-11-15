@@ -19,12 +19,10 @@ serve(async (req) => {
       throw new Error('GROQ_API_KEY is not set');
     }
 
-    // Note: Groq doesn't support realtime voice API yet
-    // We'll need to use a different approach for voice interviews
-    // For now, return an error message
+    
     return new Response(
       JSON.stringify({ 
-        error: "Voice interview requires OpenAI Realtime API which needs OPENAI_API_KEY" 
+        error: "Voice interview error" 
       }), 
       {
         status: 400,

@@ -93,11 +93,11 @@ serve(async (req) => {
 
     const allJobs = [...(internalJobs || [])];
 
-    // Fetch external jobs from JSearch API (MENA region)
+    // Fetch external jobs from JSearch API (for test)
     const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY');
     if (RAPIDAPI_KEY) {
       try {
-        // MENA region countries
+        // FOR TEST 
         const menaCountries = ['ae', 'sa', 'eg', 'ma', 'qa', 'kw', 'om', 'bh', 'jo', 'lb'];
         
         for (const country of menaCountries.slice(0, 3)) { // Fetch from top 3 countries to avoid rate limits
@@ -118,7 +118,7 @@ serve(async (req) => {
               const externalData = await response.json();
               const externalJobs = externalData.data || [];
               
-              // Currency mapping for countries
+              // Currency 
               const currencyMap: Record<string, string> = {
                 'ae': 'AED', 'sa': 'SAR', 'eg': 'EGP', 'ma': 'MAD', 
                 'qa': 'QAR', 'kw': 'KWD', 'om': 'OMR', 'bh': 'BHD',
@@ -126,7 +126,7 @@ serve(async (req) => {
                 'ke': 'KES', 'tn': 'TND'
               };
               
-              // Map external jobs to internal format
+              // external jobs to internal format
               for (const job of externalJobs.slice(0, 20)) { // Limit per country
                 allJobs.push({
                   id: `external_${job.job_id}`,

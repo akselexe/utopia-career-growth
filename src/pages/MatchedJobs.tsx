@@ -28,7 +28,7 @@ interface MatchedJob {
   created_at: string;
   jobs: Job;
 }
-
+// Matched Jobs Page
 export default function MatchedJobs() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
--- Fix function search path security issues
+
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN

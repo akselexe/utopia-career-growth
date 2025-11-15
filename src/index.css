@@ -2,13 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+
 
 @layer base {
   :root {
-    /* UtopiaHire Theme - Empowerment & Inclusivity */
+    
     --background: 35 20% 97%;
     --foreground: 220 15% 15%;
 
@@ -18,19 +16,19 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    /* Primary: Warm sunset orange - Hope & Opportunity */
+    
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Deep professional blue - Trust */
+    
     --secondary: 215 25% 27%;
     --secondary-foreground: 35 20% 97%;
 
-    /* Muted: Soft neutral */
+    
     --muted: 35 15% 92%;
     --muted-foreground: 220 10% 46%;
 
-    /* Accent: Vibrant teal - Growth & Fairness */
+    
     --accent: 175 60% 45%;
     --accent-foreground: 0 0% 100%;
 
@@ -43,18 +41,17 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
     
-    /* Enhanced Shadows with warmth */
+    
     --shadow-sm: 0 1px 2px 0 rgba(237, 108, 46, 0.08);
     --shadow-md: 0 4px 12px -2px rgba(237, 108, 46, 0.12);
     --shadow-lg: 0 20px 25px -5px rgba(237, 108, 46, 0.15);
     --shadow-glow: 0 0 40px rgba(237, 108, 46, 0.2);
     
-    /* Gradients for empowerment */
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(35 90% 60%) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(215 25% 27%) 0%, hsl(175 60% 45%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(35 20% 97%) 0%, hsl(35 30% 95%) 100%);
     
-    /* Transitions */
+    
     --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -70,7 +67,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode: Warm, empowering night theme */
+    
     --background: 220 20% 12%;
     --foreground: 35 20% 95%;
 
@@ -80,18 +77,18 @@ All colors MUST be HSL.
     --popover: 220 18% 15%;
     --popover-foreground: 35 20% 95%;
 
-    /* Primary: Bright sunset orange */
+    
     --primary: 25 95% 58%;
     --primary-foreground: 220 20% 12%;
 
-    /* Secondary: Rich deep blue */
+    
     --secondary: 215 30% 20%;
     --secondary-foreground: 35 20% 95%;
 
     --muted: 220 15% 20%;
     --muted-foreground: 35 10% 65%;
 
-    /* Accent: Luminous teal */
+    
     --accent: 175 55% 50%;
     --accent-foreground: 220 20% 12%;
 
@@ -146,12 +143,12 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  /* Gradient Text - Subtle */
+  
   .gradient-text {
     @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
 
-  /* Gradient Backgrounds */
+  
   .gradient-hero {
     background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
   }
@@ -160,7 +157,7 @@ All colors MUST be HSL.
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
   }
 
-  /* Animated Gradient Border */
+  
   .gradient-border {
     position: relative;
     background: hsl(var(--card));
@@ -179,14 +176,14 @@ All colors MUST be HSL.
     mask-composite: exclude;
   }
 
-  /* Glass Effect */
+  
   .glass {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  /* Floating Animations - Subtle */
+  
   .float {
     animation: float 6s ease-in-out infinite;
   }
@@ -220,7 +217,7 @@ All colors MUST be HSL.
     }
   }
 
-  /* Gradient Shift Animation */
+  
 @keyframes gradient-shift {
   0%, 100% {
     background-position: 0% 50%;
@@ -253,9 +250,7 @@ All colors MUST be HSL.
   animation: star-move 8s ease-in-out infinite;
 }
 
-  /* Removed overly flashy pulse-glow animation */
-
-  /* Hover Lift */
+ 
   .hover-lift {
     @apply transition-all duration-300;
   }

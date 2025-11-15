@@ -13,6 +13,7 @@ CREATE TABLE public.privacy_preferences (
   UNIQUE(user_id)
 );
 
+
 -- Enable RLS
 ALTER TABLE public.privacy_preferences ENABLE ROW LEVEL SECURITY;
 

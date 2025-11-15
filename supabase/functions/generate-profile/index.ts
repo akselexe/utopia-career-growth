@@ -22,7 +22,7 @@ serve(async (req) => {
     console.log("Messages count:", messages?.length);
     console.log("Behavioral feedback count:", behavioralFeedback?.length);
 
-    // Create a comprehensive prompt for profiling
+    // prompt for profiling
     const systemPrompt = `You are an expert interview coach and career counselor. Analyze this interview session and provide a comprehensive candidate profile with:
 
 1. **Overall Performance Score** (0-100)

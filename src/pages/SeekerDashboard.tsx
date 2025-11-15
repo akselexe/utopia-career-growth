@@ -50,7 +50,7 @@ const SeekerDashboard = () => {
 
       let footprintData = null;
 
-      // If profile has GitHub or Stack Overflow URLs, fetch footprint data
+      // If profile has GitHub or Stack Overflow URLs fetch  data
       if (seekerProfile?.github_url || (seekerProfile?.twitter_url && seekerProfile.twitter_url.includes('stackoverflow'))) {
         const githubUsername = seekerProfile?.github_url?.match(/github\.com\/([^\/]+)/)?.[1];
         const stackoverflowId = seekerProfile?.twitter_url?.includes('stackoverflow') 
@@ -60,7 +60,7 @@ const SeekerDashboard = () => {
         let githubData = null;
         let stackoverflowData = null;
 
-        // Fetch GitHub data
+        // GitHub data
         if (githubUsername) {
           const { data: ghResult } = await supabase.functions.invoke('fetch-github-profile', {
             body: { username: githubUsername }
@@ -68,7 +68,7 @@ const SeekerDashboard = () => {
           if (ghResult) githubData = ghResult;
         }
 
-        // Fetch Stack Overflow data
+        // Stack Overflow data
         if (stackoverflowId) {
           const { data: soResult } = await supabase.functions.invoke('fetch-stackoverflow-profile', {
             body: { userId: stackoverflowId }
@@ -143,7 +143,7 @@ const SeekerDashboard = () => {
       activity.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setRecentActivity(activity.slice(0, 10));
 
-      // Build simple monthly series for applications (group by month)
+      
       if (apps) {
         const seriesMap: Record<string, number> = {};
         apps.forEach((a: any) => {

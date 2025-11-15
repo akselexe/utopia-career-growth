@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/footprint-scanner" element={<FootprintScanner />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/seed-test-data" element={<SeedTestData />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* ADD CUSTOM ROUTES  */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

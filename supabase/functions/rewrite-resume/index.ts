@@ -39,7 +39,7 @@ serve(async (req) => {
 
     console.log('Rewriting resume for user:', user.id, 'with template style:', templateStyle ? 'custom' : 'default');
 
-    // Call Lovable AI to rewrite the resume in structured format
+    
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {

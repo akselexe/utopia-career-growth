@@ -134,7 +134,7 @@ const ProfileSettings = () => {
     setSaving(true);
 
     try {
-      // Validate form data
+      
       const validatedData = profileSchema.parse({
         ...formData,
         experience_years: Number(formData.experience_years),
@@ -148,7 +148,7 @@ const ProfileSettings = () => {
 
       if (profileError) throw profileError;
 
-      // Update or insert seeker_profiles
+      // Update or insert seeker(if empty) profiles
       const skillsArray = validatedData.skills 
         ? validatedData.skills.split(',').map(s => s.trim()).filter(Boolean)
         : [];

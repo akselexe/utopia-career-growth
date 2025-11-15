@@ -27,7 +27,7 @@ const CompanyDashboard = () => {
 
   const loadStats = async () => {
     try {
-      // Load jobs count
+      //  jobs 
       const { data: jobs, error: jobsError } = await supabase
         .from('jobs')
         .select('id, status', { count: 'exact' })
@@ -37,7 +37,7 @@ const CompanyDashboard = () => {
 
       const activeJobs = jobs?.filter(j => j.status === 'active').length || 0;
 
-      // Load applications count
+      // applications
       const { count: applicationsCount, error: appsError } = await supabase
         .from('applications')
         .select('id', { count: 'exact', head: true })

@@ -77,7 +77,7 @@ const CompanyProfile = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Check if profile exists
+      // if exists
       const { data: existing } = await supabase
         .from('company_profiles')
         .select('id')
@@ -85,7 +85,7 @@ const CompanyProfile = () => {
         .maybeSingle();
 
       if (existing) {
-        // Update existing profile
+        // Update
         const { error } = await supabase
           .from('company_profiles')
           .update(profile)
@@ -93,7 +93,7 @@ const CompanyProfile = () => {
 
         if (error) throw error;
       } else {
-        // Insert new profile
+        // new
         const { error } = await supabase
           .from('company_profiles')
           .insert({
