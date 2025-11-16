@@ -22,6 +22,18 @@ Follow these steps to set up the project:
    npm run dev
    ```
 
+## Test Accounts
+
+For testing purposes, you can use the following accounts:
+
+- **Job Seeker Account**
+  - Email: test@user.com
+  - Password: 12345678
+
+- **Company Account**
+  - Email: test@company.com
+  - Password: 12345678
+
 ##  Tech Stack
 
 This project is built with:
